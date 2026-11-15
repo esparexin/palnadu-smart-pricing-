@@ -88,16 +88,19 @@ describe('check-governance', () => {
     const root = await createRoot();
     const dummyPath = 'apps/api/src/dummy.ts';
     const mockPath = 'packages/persistence/src/mock.ts';
+    const zombiePath = 'apps/api/src/zombie.ts';
     await mkdir(join(root, 'apps/api/src'), { recursive: true });
     await mkdir(join(root, 'packages/persistence/src'), { recursive: true });
     await writeFile(join(root, dummyPath), '// TODO: dummy logic\n');
     await writeFile(join(root, mockPath), 'const mockUser = { id: "1" };\n');
+    await writeFile(join(root, zombiePath), '// FIXME: zombie code\n');
 
-    const violations = await checkProhibitedPatterns(root, [dummyPath, mockPath]);
-    expect(violations).toHaveLength(2);
+    const violations = await checkProhibitedPatterns(root, [dummyPath, mockPath, zombiePath]);
+    expect(violations).toHaveLength(3);
     expect(violations.map((v) => v.rule)).toEqual([
       'no-dummy-placeholders',
       'no-mock-in-production',
+      'no-dummy-placeholders',
     ]);
   });
 

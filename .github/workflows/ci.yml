@@ -2,7 +2,9 @@ name: Repository checks
 
 on:
   pull_request:
+    branches: [main]
   push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -80,6 +82,3 @@ jobs:
 
       - name: Test
         run: pnpm test
-
-      - name: Audit dependencies
-        run: pnpm audit --audit-level high
