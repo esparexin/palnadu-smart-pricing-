@@ -3,7 +3,9 @@
 - **Status:** In progress; foundation direction for D-17, standalone D-03,
   D-06, and D-13 is approved. ERP-connected D-03 cases,
   D-13 private API authentication, and D-01–D-02, D-04–D-05,
-  D-07–D-12, D-14–D-16, D-18–D-19 remain pending.
+  D-07–D-12, D-14–D-16, D-18–D-19 remain pending. Phase 2 database/backend
+  foundation scope is separately authorized; no pending business decision is
+  changed by that authorization.
 - **Project:** Palnadu.dev Smart Pricing
 - **Tracking:** [Issue #2](https://github.com/esparexin/palnadu-smart-pricing-/issues/2)
 - **Related specification:** [INITIAL_ARCHITECTURE.md](./INITIAL_ARCHITECTURE.md)
@@ -452,5 +454,11 @@ recorded above. ERP-connected D-03 cases, D-13 private API authentication, and
 D-01–D-02, D-04–D-05, D-07–D-12, D-14–D-16, and D-18–D-19 remain pending;
 their recommendations are not approvals. Record each further decision and
 any accepted deferral on issue #2 before its affected implementation phase
-starts. Keep issue #2 open until its acceptance criteria and approval evidence
-are satisfied.
+starts.
+
+The project owner authorized Phase 2 database/backend foundation work under
+Issues #4 and #5 on 2026-11-14. This scope approval does not resolve any
+pending business decision and does not authorize Phase 3 authentication
+implementation, product features, production provisioning, or deployment.
+Keep issue #2 open until its acceptance criteria and approval evidence are
+satisfied.

@@ -1,6 +1,8 @@
 # Palnadu.dev Smart Pricing — Initial Architecture and Requirements
 
-- **Status:** Draft for project-owner review; not approved for implementation
+- **Status:** Architecture proposal with recorded owner approvals; Phase 2
+  database/backend foundation authorized, other feature and production work
+  remains gated by the decision register
 - **Audit date:** 2026-11-14
 - **Tracking:** [Issue #2](https://github.com/esparexin/palnadu-smart-pricing-/issues/2)
 - **Governance:** [`docs/standards/ENGINEERING_GOVERNANCE.md`](../standards/ENGINEERING_GOVERNANCE.md)
@@ -9,7 +11,9 @@ This specification records an architecture proposal and the evidence available a
 the time of the audit. It is not evidence that any application, test, CI workflow,
 deployment, security control, or browser validation exists. Do not begin feature
 implementation until the project owner reviews and explicitly approves this
-specification.
+specification. The owner has since authorized the bounded Phase 2 foundation;
+that scope approval does not approve unresolved business decisions or authorize
+later feature or production work.
 
 ## 1. Repository audit
 
@@ -401,6 +405,12 @@ erDiagram
 
 This ERD describes proposed logical relationships, not existing database
 objects or migration files. Each installation is the implicit ownership scope.
+
+The Phase 2 implementation establishes only the approved standalone catalogue
+tables: brands, categories, products, product-category links, and variants.
+Pricing/tax, inventory, customer, enquiry, quotation, import/export,
+integration, identity, and audit schemas remain unimplemented until their
+existing feature decisions and phases permit them.
 
 ### 6.3 Data dictionary
 
@@ -929,24 +939,26 @@ send messages to real customers without explicit authorization.
 
 ### 14.2 CI enforcement matrix
 
-No CI currently exists. The following is the proposed pull-request gate; status
-is **not implemented / not verified** for every row.
+The Phase 1 workflow is configured and Phase 2 adds PostgreSQL-backed migration
+and test steps. Local checks have run, but no GitHub Actions run has been
+verified on the current branch. The status column distinguishes configured
+controls from checks that remain absent.
 
-| Check                           | Proposed automation                                                                                                            | Manual complement                                                                                | Status in audited repository |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ | ---------------------------- |
-| Dependency reproducibility      | pnpm install with frozen lockfile                                                                                              | Review dependency/license changes                                                                | No manifest or workflow      |
-| Formatting                      | Repository formatter check                                                                                                     | Review readability                                                                               | Not configured               |
-| Lint and TypeScript             | ESLint and strict `tsc`                                                                                                        | Review architecture/quality                                                                      | Not configured               |
-| Unit/contract/integration tests | CI test jobs; PostgreSQL service for integration                                                                               | Review meaningful coverage                                                                       | No tests/workflow            |
-| Build                           | Build every deployable app                                                                                                     | Confirm output/config scope                                                                      | No app/workflow              |
-| Security/dependencies           | Dependency vulnerability scan, secret scan, and supported static security analysis                                             | Triage findings and approve documented exceptions                                                | Not configured               |
-| Architecture                    | Circular dependency and boundary/import checks                                                                                 | Review dependency direction and ownership                                                        | Not configured               |
-| Code quality/hygiene            | Cyclomatic complexity target ≤10, size thresholds, unused/dead exports, suppressions, and duplicate-code checks where reliable | Review business-rule duplication, hardcoded client values, error paths, and justified exceptions | Not configured               |
-| Coverage                        | Upload/report coverage; enforce approved thresholds                                                                            | Review quality of assertions                                                                     | Not configured               |
-| API compatibility               | Generate/check OpenAPI and contract drift                                                                                      | Approve breaking/deprecation changes                                                             | No contracts/workflow        |
-| Browser/viewport                | Playwright critical journeys and viewport overflow checks                                                                      | Review screenshots and actual layout                                                             | No app/workflow              |
-| Accessibility/performance       | Automated accessibility/Lighthouse budget reports                                                                              | Keyboard/screen-reader and environment review                                                    | No app/workflow              |
-| Deploy/publish                  | Explicit protected environment approval; no automatic production publish                                                       | Owner authorization and release checklist                                                        | No deployment workflow       |
+| Check                           | Proposed automation                                                                                                            | Manual complement                                                                                | Status in audited repository                          |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------- |
+| Dependency reproducibility      | pnpm install with frozen lockfile                                                                                              | Review dependency/license changes                                                                | Configured; remote run unverified                     |
+| Formatting                      | Repository formatter check                                                                                                     | Review readability                                                                               | Configured; local check passes                        |
+| Lint and TypeScript             | ESLint and strict `tsc`                                                                                                        | Review architecture/quality                                                                      | Configured; local checks pass                         |
+| Unit/contract/integration tests | Vitest and PostgreSQL CI service                                                                                               | Review meaningful coverage                                                                       | Configured; local DB run pending                      |
+| Build                           | Build every implemented workspace package                                                                                      | Confirm output/config scope                                                                      | Configured; local build passes                        |
+| Security/dependencies           | Dependency audit at high severity; repository secret scanning                                                                  | Triage findings and approve documented exceptions                                                | Configured; no SAST; audit findings require review    |
+| Architecture                    | Workspace package-manifest guard                                                                                               | Review dependency direction and ownership                                                        | Partial; circular/import-boundary checks absent       |
+| Code quality/hygiene            | Cyclomatic complexity target ≤10, size thresholds, unused/dead exports, suppressions, and duplicate-code checks where reliable | Review business-rule duplication, hardcoded client values, error paths, and justified exceptions | Not configured                                        |
+| Coverage                        | Upload/report coverage; enforce approved thresholds                                                                            | Review quality of assertions                                                                     | Not configured                                        |
+| API compatibility               | OpenAPI generated from registered API schemas                                                                                  | Approve breaking/deprecation changes                                                             | Endpoint and route test configured; drift gate absent |
+| Browser/viewport                | Playwright critical journeys and viewport overflow checks                                                                      | Review screenshots and actual layout                                                             | Not configured; no UI exists                          |
+| Accessibility/performance       | Automated accessibility/Lighthouse budget reports                                                                              | Keyboard/screen-reader and environment review                                                    | Not configured; no UI exists                          |
+| Deploy/publish                  | Explicit protected environment approval; no automatic production publish                                                       | Owner authorization and release checklist                                                        | Not configured                                        |
 
 CI is not a substitute for branch protection. After the remote has a default
 branch, an authorized owner should configure required reviews and required
@@ -1046,19 +1058,22 @@ recorded before the affected feature is considered ready.
 
 ## 18. Audit limits and approval gate
 
-This audit directly inspected the local Git state, local file inventory, remote
+At the time of the initial audit, this review directly inspected the local Git state, local file inventory, remote
 branch refs/configuration, GitHub repository metadata, issues #1–#19, issue #2's
 comments/body, and the complete 18-section governance document. The branch has
-no commit, so there is no commit hash to report. GitHub reports no default branch;
+no commit at that time. Since then, Phase 1 has been preserved in local commit
+`963e7aa` and Phase 2 is on a separate local branch; neither was pushed. GitHub reports no default branch;
 the `main` protection lookup returned 404 because `main` does not exist. This
 does not establish the state of settings unavailable from the inspected
 metadata, and no hidden/administrative settings were changed.
 
 No application code, dependencies, tests, CI, browser session, security scan,
-build, deployment, or production setting was present or exercised. Therefore
-none of those quality gates is marked complete.
+build, deployment, or production setting was present or exercised during the
+initial audit. Subsequent local foundation validation is reported separately;
+it does not establish a remote CI run or complete feature/release quality gates.
 
-**Approval gate:** The project owner must review this draft, resolve or explicitly
-accept the open decisions needed for phase 1, and record approval on issue #2
-before implementation begins. Until that approval is explicit, this document
-is planning only and issue #2 remains open.
+**Approval gate:** Phase 2 database/backend foundation work is authorized under
+the current bounded scope. Existing pending decisions continue to block only
+their affected feature/production work. The approval does not authorize Phase 3
+authentication implementation, product workflows, production provisioning, or
+deployment. Issue #2 remains open.

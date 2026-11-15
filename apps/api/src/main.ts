@@ -1,0 +1,21 @@
+import { createDatabase } from '@palnadu/persistence';
+import { parseServerConfig } from '@palnadu/server-config';
+import { buildServer } from './server.js';
+
+const config = parseServerConfig(process.env);
+const database = createDatabase(config);
+const server = await buildServer({ config, database });
+
+const shutdown = async () => {
+  try {
+    await server.close();
+  } catch (error) {
+    server.log.error({ err: error }, 'Graceful shutdown failed');
+    process.exitCode = 1;
+  }
+};
+
+process.once('SIGINT', () => void shutdown());
+process.once('SIGTERM', () => void shutdown());
+
+await server.listen({ host: config.host, port: config.port });

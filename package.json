@@ -7,16 +7,22 @@
     "node": ">=24.0.0"
   },
   "scripts": {
+    "build": "pnpm --recursive --if-present build",
     "check:workspace": "node scripts/check-workspace.ts",
+    "db:check": "pnpm build && pnpm --filter @palnadu/persistence db:check",
+    "db:generate": "pnpm build && pnpm --filter @palnadu/persistence db:generate",
+    "db:migrate": "pnpm build && pnpm --filter @palnadu/persistence db:migrate",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "vitest run"
+    "test": "pnpm build && node --env-file-if-exists=.env node_modules/vitest/vitest.mjs run",
+    "test:unit": "pnpm build && node --env-file-if-exists=.env node_modules/vitest/vitest.mjs run --exclude '**/*.db.test.ts'",
+    "typecheck": "pnpm build && tsc --noEmit -p tsconfig.json"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@types/node": "24.19.2",
+    "drizzle-kit": "0.31.11",
     "eslint": "10.15.0",
     "eslint-config-prettier": "10.1.8",
     "prettier": "3.10.1",
