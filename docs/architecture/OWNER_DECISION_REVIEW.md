@@ -8,7 +8,10 @@ features, remains in [DECISION_REGISTER.md](./DECISION_REGISTER.md).
 approved. ERP-connected D-03 cases, D-13 private API authentication, and
 decisions for later features or production remain pending. D-06's detailed
 permission matrix will be documented during admin module implementation.
-Issue #2 remains open; these decisions do not authorize coding.
+The owner has separately authorized Phase 2 database/backend foundation work
+under Issues #4 and #5. This does not authorize Phase 3 authentication
+implementation, product features, or production activity. Issue #2 remains
+open.
 
 ## Foundation decisions
 

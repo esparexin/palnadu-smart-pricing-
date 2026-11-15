@@ -36,27 +36,40 @@ Follow the proposed responsibilities in
   actual implementation work.
 - Provider adapters translate external systems through documented ports.
 
+The Phase 2 foundation uses `packages/contracts` for shared Zod API contracts,
+`packages/server-config` for validated server settings, `packages/persistence`
+for Drizzle/PostgreSQL access, and `apps/api` for Fastify composition. Do not add
+domain/application packages until real business use cases require them. The
+current API exposes only operational health/readiness and OpenAPI endpoints.
+
 Do not create empty or speculative packages. Keep domain logic independent of
 frameworks, databases, and provider SDKs. Public responses must never expose
 hidden prices; integrations and client data remain installation-specific.
 
 ## Phase and validation
 
-The current authorized scope is Phase 1 repository foundation only. Do not
-implement product features, database migrations, deployment, or package
-publishing without separate approval. Do not alter approved owner decisions;
-raise any conflict for review.
+The authorized scope is Phase 2 database and backend foundation only. Do not
+implement product CRUD, pricing, inventory, customer, quotation, import/export,
+ERP, or UI features. Authentication direction is approved by D-06, but login,
+sessions, permission enforcement, MFA, recovery, and related security tests
+belong to Phase 3 / Issue #6. Do not provision production infrastructure,
+deploy, publish packages, or alter approved owner decisions.
 
 Run the applicable root checks before proposing changes:
 
 ```sh
+pnpm install --frozen-lockfile
 pnpm check:workspace
 pnpm format:check
 pnpm lint
+pnpm build
 pnpm typecheck
 pnpm test
+pnpm audit --audit-level high
 ```
 
-There are no application packages yet, so application build, browser, and
-feature-test results must not be claimed. Report checks that are not applicable
-or have not run. Do not work directly on `main`.
+The full test suite requires a disposable PostgreSQL database configured by
+`TEST_DATABASE_URL`; never point it at production data. `pnpm test:unit` runs
+without PostgreSQL. There are no public/admin UI packages, so browser,
+responsive, and feature-workflow results must not be claimed. Report checks
+that are not applicable or have not run. Do not work directly on `main`.

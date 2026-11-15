@@ -1,6 +1,11 @@
 packages:
   - apps/*
   - packages/*
+allowBuilds:
+  esbuild: true
 minimumReleaseAgeExclude:
   - '@eslint/config-array@0.23.6'
   - eslint@10.15.0
+overrides:
+  '@esbuild-kit/core-utils>esbuild': 0.25.12
+  minimatch: 11.0.8
