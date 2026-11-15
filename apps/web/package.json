@@ -5,7 +5,9 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev",
+    "lint": "eslint .",
     "start": "next start",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
