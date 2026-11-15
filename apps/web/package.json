@@ -6,6 +6,8 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "eslint .",
+    "prebuild": "pnpm --filter @palnadu/contracts build",
+    "pretest": "pnpm --filter @palnadu/contracts build",
     "start": "next start",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"

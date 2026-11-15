@@ -129,7 +129,7 @@ export default function AdminDashboardPage() {
           Permissions enforced across catalogue API endpoints and administrative interfaces.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
-          {user?.permissions.map((permission) => (
+          {user?.permissions.map((permission: string) => (
             <span
               key={permission}
               className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 font-mono text-xs text-slate-700"
