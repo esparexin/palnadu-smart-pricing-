@@ -8,5 +8,19 @@ export default tseslint.config(
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
+  {
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
+      'no-empty': ['error', { allowEmptyCatch: false }],
+      'no-unreachable': 'error',
+      eqeqeq: ['error', 'always'],
+      complexity: ['warn', 15],
+      'max-depth': ['warn', 4],
+    },
+  },
   prettier,
 );

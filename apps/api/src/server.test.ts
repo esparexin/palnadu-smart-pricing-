@@ -1,12 +1,22 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { parseServerConfig } from '@palnadu/server-config';
-import { buildServer } from './server.js';
+import { buildServer, LOGGER_REDACT_PATHS } from './server.js';
+import type { DatabaseClient } from '@palnadu/persistence';
 
 const config = parseServerConfig({
   DATABASE_URL: 'postgres://user:pass@localhost:5432/catalog',
   LOG_LEVEL: 'silent',
   NODE_ENV: 'test',
 });
+
+function createMockDatabase(overrides: Partial<DatabaseClient> = {}): DatabaseClient {
+  return {
+    close: vi.fn(),
+    ping: vi.fn().mockResolvedValue(undefined),
+    db: {} as unknown as DatabaseClient['db'],
+    ...overrides,
+  };
+}
 
 describe('API foundation', () => {
   const servers: Awaited<ReturnType<typeof buildServer>>[] = [];
@@ -16,7 +26,7 @@ describe('API foundation', () => {
   });
 
   it('serves health and readiness using the shared response contracts', async () => {
-    const database = { close: vi.fn(), ping: vi.fn().mockResolvedValue(undefined) };
+    const database = createMockDatabase();
     const server = await buildServer({ config, database });
     servers.push(server);
 
@@ -31,10 +41,9 @@ describe('API foundation', () => {
   });
 
   it('returns a safe error response when the database is unavailable', async () => {
-    const database = {
-      close: vi.fn(),
+    const database = createMockDatabase({
       ping: vi.fn().mockRejectedValue(new Error('secret connection detail')),
-    };
+    });
     const server = await buildServer({ config, database });
     servers.push(server);
 
@@ -53,7 +62,7 @@ describe('API foundation', () => {
   it('exposes an OpenAPI document derived from registered routes', async () => {
     const server = await buildServer({
       config,
-      database: { close: vi.fn(), ping: vi.fn() },
+      database: createMockDatabase(),
     });
     servers.push(server);
 
@@ -62,12 +71,15 @@ describe('API foundation', () => {
 
     expect(response.statusCode).toBe(200);
     expect(document.paths['/api/v1/health'].get.responses['200']).toBeDefined();
+    expect(document.paths['/api/v1/admin/auth/login'].post.responses['200']).toBeDefined();
+    expect(document.paths['/api/v1/admin/auth/logout'].post.responses['200']).toBeDefined();
+    expect(document.paths['/api/v1/admin/auth/me'].get.responses['200']).toBeDefined();
   });
 
   it('returns the shared error contract for unknown routes', async () => {
     const server = await buildServer({
       config,
-      database: { close: vi.fn(), ping: vi.fn() },
+      database: createMockDatabase(),
     });
     servers.push(server);
 
@@ -85,8 +97,9 @@ describe('API foundation', () => {
   it('accepts only bounded safe request identifiers', async () => {
     const server = await buildServer({
       config,
-      database: { close: vi.fn(), ping: vi.fn() },
+      database: createMockDatabase(),
     });
+
     servers.push(server);
 
     const valid = await server.inject({
@@ -103,5 +116,21 @@ describe('API foundation', () => {
     expect(valid.json().error.requestId).toBe('client-request-123');
     expect(invalid.json().error.requestId).not.toBe('sensitive value');
     expect(invalid.json().error.requestId).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
+  it('defines comprehensive redaction paths for sensitive credentials and tokens', async () => {
+    const server = await buildServer({ config, database: createMockDatabase() });
+    servers.push(server);
+
+    expect(LOGGER_REDACT_PATHS).toContain('*.password');
+    expect(LOGGER_REDACT_PATHS).toContain('*.passwordHash');
+    expect(LOGGER_REDACT_PATHS).toContain('*.secret');
+    expect(LOGGER_REDACT_PATHS).toContain('*.sessionSecret');
+    expect(LOGGER_REDACT_PATHS).toContain('*.sessionToken');
+    expect(LOGGER_REDACT_PATHS).toContain('*.token');
+    expect(LOGGER_REDACT_PATHS).toContain('req.headers.authorization');
+    expect(LOGGER_REDACT_PATHS).toContain('req.headers.cookie');
+    expect(LOGGER_REDACT_PATHS).toContain('req.headers["x-api-key"]');
+    expect(LOGGER_REDACT_PATHS).toContain('res.headers["set-cookie"]');
   });
 });

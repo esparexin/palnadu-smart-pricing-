@@ -12,12 +12,22 @@ import {
   HealthResponseSchema,
   ReadinessResponseSchema,
 } from '@palnadu/contracts';
+import cookie from '@fastify/cookie';
+import rateLimit from '@fastify/rate-limit';
 import type { ServerConfig } from '@palnadu/server-config';
-import type { DatabaseClient } from '@palnadu/persistence';
 
-interface ApiDependencies {
+import type { DatabaseClient } from '@palnadu/persistence';
+import {
+  authPlugin,
+  requireAdminAuth,
+  requireAdminPermission,
+  validateCsrfProtection,
+  SESSION_COOKIE_NAME,
+} from './auth/auth.plugin.js';
+
+export interface ApiDependencies {
   config: ServerConfig;
-  database: Pick<DatabaseClient, 'close' | 'ping'>;
+  database: DatabaseClient;
 }
 
 function getStatusCode(error: unknown): number | undefined {
@@ -69,19 +79,25 @@ function getRequestId(request: { headers: Record<string, string | string[] | und
   return randomUUID();
 }
 
+export const LOGGER_REDACT_PATHS = [
+  'req.headers.authorization',
+  'req.headers.cookie',
+  'req.headers["x-api-key"]',
+  'res.headers["set-cookie"]',
+  '*.password',
+  '*.passwordHash',
+  '*.secret',
+  '*.sessionSecret',
+  '*.sessionToken',
+  '*.token',
+] as const;
+
 export async function buildServer({ config, database }: ApiDependencies) {
   const app = Fastify({
     logger: {
       level: config.logLevel,
       redact: {
-        paths: [
-          'req.headers.authorization',
-          'req.headers.cookie',
-          'req.headers["x-api-key"]',
-          '*.password',
-          '*.secret',
-          '*.token',
-        ],
+        paths: [...LOGGER_REDACT_PATHS],
         censor: '[REDACTED]',
       },
     },
@@ -107,6 +123,16 @@ export async function buildServer({ config, database }: ApiDependencies) {
     transform: jsonSchemaTransform,
   });
 
+  await app.register(cookie, {
+    secret: config.sessionSecret,
+    hook: 'onRequest',
+  });
+
+  await app.register(rateLimit, {
+    global: false,
+    hook: 'preHandler',
+  });
+
   app.setErrorHandler((error: unknown, request, reply) => {
     const validationError = isValidationError(error);
     const errorStatusCode = getStatusCode(error);
@@ -121,6 +147,18 @@ export async function buildServer({ config, database }: ApiDependencies) {
         { errorCode: getErrorCode(error), errorName: getErrorName(error) },
         'Request failed',
       );
+    }
+
+    if (statusCode === 429 || getErrorCode(error) === 'FST_ERR_RATE_LIMIT_EXCEEDED') {
+      return reply
+        .status(429)
+        .send(
+          errorResponse(
+            'RATE_LIMIT_EXCEEDED',
+            'Too many requests. Please try again later.',
+            request.id,
+          ),
+        );
     }
 
     const code = validationError
@@ -184,5 +222,9 @@ export async function buildServer({ config, database }: ApiDependencies) {
 
   app.get('/api/v1/openapi.json', async () => app.swagger());
 
+  await app.register(authPlugin, { config, database });
+
   return app;
 }
+
+export { requireAdminAuth, requireAdminPermission, validateCsrfProtection, SESSION_COOKIE_NAME };
