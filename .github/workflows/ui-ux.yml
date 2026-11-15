@@ -40,6 +40,7 @@ jobs:
         run: |
           if [ -d "apps/web" ]; then
             echo "Validating UI/UX standards for apps/web..."
+            pnpm --filter @palnadu/contracts build
             pnpm --filter @palnadu/web lint
             pnpm --filter @palnadu/web build
             pnpm --filter @palnadu/web test

@@ -30,7 +30,7 @@ async function scan(current: string, root: string, acc: string[]): Promise<void>
     throw err;
   }
   for (const e of entries) {
-    if (['node_modules', 'dist', 'coverage'].includes(e.name)) continue;
+    if (['node_modules', 'dist', 'coverage', '.next'].includes(e.name)) continue;
     const full = join(current, e.name);
     if (e.isDirectory()) {
       if (!relative(root, full).startsWith('packages/persistence/drizzle')) {
@@ -46,6 +46,7 @@ function isExempt(rel: string): boolean {
   return (
     rel.endsWith('.test.ts') ||
     rel.endsWith('.db.test.ts') ||
+    rel.endsWith('.d.ts') ||
     rel === 'scripts/check-governance.ts' ||
     rel === 'scripts/check-governance.mjs'
   );
