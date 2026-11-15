@@ -54,6 +54,9 @@ jobs:
       - name: Validate workspace boundaries
         run: pnpm check:workspace
 
+      - name: Enforce engineering governance policies
+        run: pnpm check:governance
+
       - name: Build workspace packages
         run: pnpm build
 

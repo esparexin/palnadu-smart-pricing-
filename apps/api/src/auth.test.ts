@@ -401,4 +401,26 @@ describe('Admin Authentication API (unit)', () => {
       }),
     );
   });
+
+  it('enforces shared Zod contracts from @palnadu/contracts as SSOT', async () => {
+    const database = createMockDatabase();
+    const server = await buildServer({ config, database });
+    servers.push(server);
+
+    const response = await server.inject({
+      method: 'POST',
+      url: '/api/v1/admin/auth/login',
+      headers: { host: 'localhost:80' },
+      payload: {
+        email: 'not-an-email',
+        password: '',
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    const body = response.json();
+    expect(body).toHaveProperty('error');
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+    expect(body.error.message).toBe('Request could not be processed');
+  });
 });

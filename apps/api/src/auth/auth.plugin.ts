@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 
 import {
@@ -13,7 +13,6 @@ import {
 import {
   createAdminSession,
   findAdminUserByNormalizedEmail,
-  findValidSessionByToken,
   generateSessionToken,
   revokeSessionByToken,
   verifyPassword,
@@ -21,18 +20,21 @@ import {
 import type { DatabaseClient } from '@palnadu/persistence';
 import type { ServerConfig } from '@palnadu/server-config';
 
-declare module 'fastify' {
-  interface FastifyRequest {
-    admin?: AdminUser;
-    session?: {
-      id: string;
-      userId: string;
-      expiresAt: Date;
-    };
-  }
-}
+import {
+  SESSION_COOKIE_NAME,
+  errorResponse,
+  requireAdminAuth,
+  requireAdminPermission,
+  validateCsrfProtection,
+} from './auth.guards.js';
 
-export const SESSION_COOKIE_NAME = 'palnadu_session';
+export {
+  SESSION_COOKIE_NAME,
+  errorResponse,
+  requireAdminAuth,
+  requireAdminPermission,
+  validateCsrfProtection,
+};
 
 const DUMMY_SCRYPT_HASH =
   '$scrypt$N=16384,r=8,p=1$0123456789abcdef0123456789abcdef$0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
@@ -40,147 +42,6 @@ const DUMMY_SCRYPT_HASH =
 export interface AuthPluginOptions {
   config: ServerConfig;
   database: DatabaseClient;
-}
-
-export function errorResponse(code: string, message: string, requestId: string) {
-  return {
-    error: {
-      code,
-      message,
-      requestId,
-    },
-  };
-}
-
-export function requireAdminAuth(database: DatabaseClient) {
-  return async (request: FastifyRequest, reply: FastifyReply) => {
-    const rawCookie = request.cookies[SESSION_COOKIE_NAME];
-    if (!rawCookie) {
-      return reply
-        .status(401)
-        .send(errorResponse('UNAUTHORIZED', 'Authentication required', request.id));
-    }
-
-    const unsigned = request.unsignCookie(rawCookie);
-    if (!unsigned.valid || !unsigned.value) {
-      return reply
-        .status(401)
-        .send(errorResponse('UNAUTHORIZED', 'Invalid or tampered session cookie', request.id));
-    }
-
-    const resolved = await findValidSessionByToken(database.db, unsigned.value);
-    if (!resolved) {
-      return reply
-        .status(401)
-        .send(errorResponse('UNAUTHORIZED', 'Session expired, revoked, or invalid', request.id));
-    }
-
-    request.admin = {
-      id: resolved.user.id,
-      email: resolved.user.email,
-      name: resolved.user.name,
-      status: resolved.user.status as AdminUser['status'],
-      permissions: resolved.user.permissions as AdminUser['permissions'],
-      createdAt: resolved.user.createdAt.toISOString(),
-      updatedAt: resolved.user.updatedAt.toISOString(),
-    };
-
-    request.session = {
-      id: resolved.session.id,
-      userId: resolved.session.userId,
-      expiresAt: resolved.session.expiresAt,
-    };
-  };
-}
-
-export function requireAdminPermission(requiredPermission: string) {
-  return async (request: FastifyRequest, reply: FastifyReply) => {
-    if (!request.admin) {
-      return reply
-        .status(401)
-        .send(errorResponse('UNAUTHORIZED', 'Authentication required', request.id));
-    }
-
-    if (!request.admin.permissions.includes(requiredPermission)) {
-      return reply
-        .status(403)
-        .send(
-          errorResponse(
-            'FORBIDDEN',
-            `Missing required permission: ${requiredPermission}`,
-            request.id,
-          ),
-        );
-    }
-  };
-}
-
-export async function validateCsrfProtection(
-  request: FastifyRequest,
-  reply: FastifyReply,
-): Promise<void> {
-  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
-    const rawHost = request.headers.host;
-    if (
-      !rawHost ||
-      typeof rawHost !== 'string' ||
-      rawHost.trim().length === 0 ||
-      rawHost.includes(',') ||
-      rawHost.includes(' ')
-    ) {
-      reply.status(400).send(errorResponse('BAD_REQUEST', 'Missing Host header', request.id));
-      return;
-    }
-
-    const normalizedHost = rawHost.replace(/:(80|443)$/, '').toLowerCase();
-    const origin = request.headers.origin;
-
-    if (origin) {
-      let originHost: string;
-      try {
-        const parsedOrigin = new URL(origin);
-        if (!['http:', 'https:'].includes(parsedOrigin.protocol)) {
-          reply
-            .status(403)
-            .send(errorResponse('CSRF_ERROR', 'Malformed origin header', request.id));
-          return;
-        }
-        originHost = parsedOrigin.host.replace(/:(80|443)$/, '').toLowerCase();
-      } catch {
-        reply.status(403).send(errorResponse('CSRF_ERROR', 'Malformed origin header', request.id));
-        return;
-      }
-
-      if (originHost !== normalizedHost) {
-        reply
-          .status(403)
-          .send(errorResponse('CSRF_ERROR', 'Cross-origin request rejected', request.id));
-        return;
-      }
-    } else if (request.headers.referer) {
-      let refererHost: string;
-      try {
-        const parsedReferer = new URL(request.headers.referer);
-        if (!['http:', 'https:'].includes(parsedReferer.protocol)) {
-          reply
-            .status(403)
-            .send(errorResponse('CSRF_ERROR', 'Malformed referer header', request.id));
-          return;
-        }
-        refererHost = parsedReferer.host.replace(/:(80|443)$/, '').toLowerCase();
-      } catch {
-        reply.status(403).send(errorResponse('CSRF_ERROR', 'Malformed referer header', request.id));
-        return;
-      }
-
-      if (refererHost !== normalizedHost) {
-        reply
-          .status(403)
-          .send(errorResponse('CSRF_ERROR', 'Cross-origin request rejected', request.id));
-        return;
-      }
-    }
-  }
 }
 
 export const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (
@@ -329,7 +190,6 @@ export const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (
       },
     },
     async (request) => {
-      // request.admin is guaranteed to be set by requireAdminAuth
       return request.admin!;
     },
   );

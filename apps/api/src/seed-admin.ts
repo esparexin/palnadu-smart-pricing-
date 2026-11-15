@@ -9,28 +9,43 @@ export interface SeedAdminOptions {
   argv?: string[];
 }
 
+function parseSeedEnvironment(
+  optionsOrEnv: SeedAdminOptions | Record<string, string | undefined>,
+): { env: Record<string, string | undefined>; argv: string[]; isExplicit: boolean } {
+  const isOptionsObject = Boolean(
+    optionsOrEnv && ('env' in optionsOrEnv || 'argv' in optionsOrEnv),
+  );
+  if (isOptionsObject) {
+    const opts = optionsOrEnv as SeedAdminOptions;
+    return {
+      env: opts.env ?? process.env,
+      argv: opts.argv ?? [],
+      isExplicit: Boolean(opts.env),
+    };
+  }
+
+  const rawEnv = optionsOrEnv as Record<string, string | undefined>;
+  const hasKeys = Object.keys(rawEnv).length > 0;
+  return {
+    env: hasKeys ? rawEnv : process.env,
+    argv: hasKeys ? [] : process.argv.slice(2),
+    isExplicit: hasKeys,
+  };
+}
+
+function loadLocalEnvFile(): void {
+  const envFile = resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env');
+  if (existsSync(envFile)) {
+    process.loadEnvFile(envFile);
+  }
+}
+
 export async function seedAdmin(
   optionsOrEnv: SeedAdminOptions | Record<string, string | undefined> = {},
 ) {
-  const isOptionsObject = optionsOrEnv && ('env' in optionsOrEnv || 'argv' in optionsOrEnv);
-  const explicitEnv = isOptionsObject
-    ? (optionsOrEnv as SeedAdminOptions).env
-    : Object.keys(optionsOrEnv).length > 0
-      ? (optionsOrEnv as Record<string, string | undefined>)
-      : undefined;
-
-  const env = explicitEnv ?? process.env;
-  const argv = isOptionsObject
-    ? ((optionsOrEnv as SeedAdminOptions).argv ?? [])
-    : explicitEnv
-      ? []
-      : process.argv.slice(2);
-
-  if (!explicitEnv) {
-    const envFile = resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env');
-    if (existsSync(envFile)) {
-      process.loadEnvFile(envFile);
-    }
+  const { env, argv, isExplicit } = parseSeedEnvironment(optionsOrEnv);
+  if (!isExplicit) {
+    loadLocalEnvFile();
   }
 
   const email = env.ADMIN_EMAIL || argv[0];
@@ -47,14 +62,12 @@ export async function seedAdmin(
   const database = createDatabase(config);
 
   try {
-    const user = await provisionAdminUser(database.db, {
+    return await provisionAdminUser(database.db, {
       email,
       name,
       password,
       permissions: ['catalogue:manage', 'pricing:manage', 'admin:manage'],
     });
-
-    return user;
   } finally {
     await database.close();
   }
