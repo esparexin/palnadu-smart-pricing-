@@ -81,6 +81,9 @@ importers:
 
   packages/persistence:
     dependencies:
+      '@palnadu/contracts':
+        specifier: workspace:*
+        version: link:../contracts
       '@palnadu/server-config':
         specifier: workspace:*
         version: link:../server-config

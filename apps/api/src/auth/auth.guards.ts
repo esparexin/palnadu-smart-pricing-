@@ -66,7 +66,7 @@ export function requireAdminAuth(database: DatabaseClient) {
   };
 }
 
-export function requireAdminPermission(requiredPermission: string) {
+export function requireAdminPermission(...requiredPermissions: string[]) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     if (!request.admin) {
       return reply
@@ -74,13 +74,14 @@ export function requireAdminPermission(requiredPermission: string) {
         .send(errorResponse('UNAUTHORIZED', 'Authentication required', request.id));
     }
 
-    if (!request.admin.permissions.includes(requiredPermission)) {
+    const hasAny = requiredPermissions.some((perm) => request.admin!.permissions.includes(perm));
+    if (!hasAny) {
       return reply
         .status(403)
         .send(
           errorResponse(
             'FORBIDDEN',
-            `Missing required permission: ${requiredPermission}`,
+            `Missing required permission: ${requiredPermissions.join(' or ')}`,
             request.id,
           ),
         );

@@ -24,3 +24,5 @@ export function createDatabase(config: ServerConfig) {
 }
 
 export type DatabaseClient = ReturnType<typeof createDatabase>;
+export type DbExecutor =
+  DatabaseClient['db'] | Parameters<Parameters<DatabaseClient['db']['transaction']>[0]>[0];

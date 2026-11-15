@@ -1,6 +1,13 @@
 export { createDatabase } from './client.js';
-export type { DatabaseClient } from './client.js';
+export type { DatabaseClient, DbExecutor } from './client.js';
 export { migrate } from 'drizzle-orm/postgres-js/migrator';
 export { eq } from 'drizzle-orm';
 export * from './schema.js';
 export * from './auth.js';
+export * from './pricing.js';
+export * from './catalogue-brands.js';
+export * from './catalogue-categories.js';
+export * from './catalogue-products.js';
+export * from './catalogue-variants.js';
+export * from './catalogue-images.js';
+export * from './catalogue-relationships.js';
