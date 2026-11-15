@@ -83,3 +83,4 @@ export type LogoutResponse = z.infer<typeof LogoutResponseSchema>;
 
 export * from './pricing.js';
 export * from './catalogue.js';
+export * from './catalogue-admin.js';

@@ -24,6 +24,7 @@ import {
   validateCsrfProtection,
   SESSION_COOKIE_NAME,
 } from './auth/auth.plugin.js';
+import { cataloguePlugin } from './catalogue/catalogue.plugin.js';
 
 export interface ApiDependencies {
   config: ServerConfig;
@@ -223,6 +224,7 @@ export async function buildServer({ config, database }: ApiDependencies) {
   app.get('/api/v1/openapi.json', async () => app.swagger());
 
   await app.register(authPlugin, { config, database });
+  await app.register(cataloguePlugin, { config, database });
 
   return app;
 }
