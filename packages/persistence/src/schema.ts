@@ -111,15 +111,6 @@ export const adminUsers = pgTable(
     check('admin_users_name_nonblank_ck', sql`length(btrim(${table.name})) > 0`),
     check('admin_users_password_hash_nonblank_ck', sql`length(btrim(${table.passwordHash})) > 0`),
     check('admin_users_permissions_array_ck', sql`jsonb_typeof(${table.permissions}) = 'array'`),
-    check('admin_users_name_nonblank_ck', sql`length(btrim(${table.name})) > 0`),
-    check(
-      'admin_users_password_hash_nonblank_ck',
-      sql`length(btrim(${table.passwordHash})) > 0`,
-    ),
-    check(
-      'admin_users_permissions_array_ck',
-      sql`jsonb_typeof(${table.permissions}) = 'array'`,
-    ),
     uniqueIndex('admin_users_normalized_email_uq').on(sql`lower(btrim(${table.email}))`),
     index('admin_users_status_idx').on(table.status),
   ],
@@ -146,4 +137,3 @@ export const adminSessions = pgTable(
     index('admin_sessions_expires_at_idx').on(table.expiresAt),
   ],
 );
-

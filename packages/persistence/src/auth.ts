@@ -1,5 +1,5 @@
 import { createHash, randomBytes, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto';
-import { and, eq, gt, lte } from 'drizzle-orm';
+import { and, eq, gt, lte, sql } from 'drizzle-orm';
 import type { DatabaseClient } from './client.js';
 import { adminSessions, adminUsers } from './schema.js';
 
@@ -268,4 +268,95 @@ export async function cleanExpiredSessions(db: DbExecutor, now = new Date()): Pr
     .where(lte(adminSessions.expiresAt, now))
     .returning({ id: adminSessions.id });
   return deleted.length;
+}
+
+export interface ProvisionAdminUserInput {
+  email: string;
+  name: string;
+  password: string;
+  permissions?: string[];
+}
+
+export interface SafeAdminUser {
+  id: string;
+  email: string;
+  name: string;
+  status: 'active' | 'suspended';
+  permissions: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Finds an administrator account by case- and whitespace-normalized email.
+ */
+export async function findAdminUserByNormalizedEmail(db: DbExecutor, email: string) {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return null;
+
+  const rows = await db
+    .select()
+    .from(adminUsers)
+    .where(eq(sql`lower(btrim(${adminUsers.email}))`, normalized))
+    .limit(1);
+
+  return rows[0] ?? null;
+}
+
+/**
+ * Provisions an administrator account securely.
+ * Hashes password using scrypt, validates constraints, and prevents duplicate registration.
+ * Never stores or returns the plaintext password or password hash.
+ */
+export async function provisionAdminUser(
+  db: DbExecutor,
+  input: ProvisionAdminUserInput,
+): Promise<SafeAdminUser> {
+  const normalizedEmail = input.email.trim().toLowerCase();
+  if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+    throw new Error('Invalid email format');
+  }
+
+  const trimmedName = input.name.trim();
+  if (!trimmedName) {
+    throw new Error('Name cannot be blank');
+  }
+
+  if (typeof input.password !== 'string' || input.password.length < 8) {
+    throw new Error('Password must be at least 8 characters');
+  }
+
+  const existing = await db
+    .select({ id: adminUsers.id })
+    .from(adminUsers)
+    .where(eq(sql`lower(btrim(${adminUsers.email}))`, normalizedEmail))
+    .limit(1);
+
+  if (existing.length > 0) {
+    throw new Error(`Admin user already exists with email: ${normalizedEmail}`);
+  }
+
+  const passwordHash = await hashPassword(input.password);
+  const permissions = Array.from(new Set(input.permissions || []));
+
+  const [created] = await db
+    .insert(adminUsers)
+    .values({
+      email: normalizedEmail,
+      name: trimmedName,
+      passwordHash,
+      status: 'active',
+      permissions,
+    })
+    .returning({
+      id: adminUsers.id,
+      email: adminUsers.email,
+      name: adminUsers.name,
+      status: adminUsers.status,
+      permissions: adminUsers.permissions,
+      createdAt: adminUsers.createdAt,
+      updatedAt: adminUsers.updatedAt,
+    });
+
+  return created as SafeAdminUser;
 }
