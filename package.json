@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "pnpm --recursive --if-present build",
-    "check:governance": "node scripts/check-governance.ts",
+    "check:governance": "node scripts/check-governance.mjs",
     "check:workspace": "node scripts/check-workspace.ts",
     "db:check": "pnpm build && pnpm --filter @palnadu/persistence db:check",
     "db:generate": "pnpm build && pnpm --filter @palnadu/persistence db:generate",

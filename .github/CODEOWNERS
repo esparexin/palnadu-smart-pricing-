@@ -1,0 +1,29 @@
+# Palnadu Smart Pricing Code Ownership
+# Authoritative code owners for modules and governance
+
+* @esparexin
+
+# Documentation and architecture standards
+/docs/ @esparexin
+/AGENTS.md @esparexin
+/README.md @esparexin
+
+# CI/CD and automation
+/.github/ @esparexin
+/scripts/ @esparexin
+
+# Contracts, schemas, and pricing calculations
+/packages/contracts/ @esparexin
+
+# Server configuration and environment validation
+/packages/server-config/ @esparexin
+
+# Database persistence, migrations, and ORM
+/packages/persistence/ @esparexin
+
+# Application APIs and controllers
+/apps/api/ @esparexin
+
+# Presentation and background jobs
+/apps/web/ @esparexin
+/apps/worker/ @esparexin

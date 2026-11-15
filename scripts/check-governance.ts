@@ -44,7 +44,10 @@ async function scan(current: string, root: string, acc: string[]): Promise<void>
 
 function isExempt(rel: string): boolean {
   return (
-    rel.endsWith('.test.ts') || rel.endsWith('.db.test.ts') || rel === 'scripts/check-governance.ts'
+    rel.endsWith('.test.ts') ||
+    rel.endsWith('.db.test.ts') ||
+    rel === 'scripts/check-governance.ts' ||
+    rel === 'scripts/check-governance.mjs'
   );
 }
 
@@ -114,7 +117,10 @@ export async function checkProhibitedPatterns(
 ): Promise<GovernanceViolation[]> {
   const violations: GovernanceViolation[] = [];
   const emptyCatch = /catch\s*(?:\([^)]*\))?\s*\{\s*\}/;
-  const dummyPlaceholder = new RegExp('\\b(TODO|FIXME):\\s*(?:dummy|fake|placeholder)\\b', 'i');
+  const dummyPlaceholder = new RegExp(
+    '\\b(TODO|FIXME):\\s*(?:dummy|fake|placeholder|alien|zombie|dead|legacy|culprit)\\b',
+    'i',
+  );
   const mockAssignmentRegex = new RegExp('\\bconst\\s+' + 'mock[A-Z]\\w+\\s*=');
 
   for (const rel of files) {
