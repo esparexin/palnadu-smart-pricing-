@@ -15,6 +15,13 @@
       "when": 1794714268244,
       "tag": "0001_violet_gamma_corps",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794743825917,
+      "tag": "0002_rainy_franklin_richards",
+      "breakpoints": true
     }
   ]
 }
