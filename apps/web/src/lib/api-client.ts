@@ -7,6 +7,7 @@ import type {
   ReadinessResponse,
   SessionResponse,
 } from '@palnadu/contracts';
+import { CatalogueClient } from './catalogue-client';
 
 export class ApiClientError extends Error {
   public readonly status: number;
@@ -58,12 +59,14 @@ function handleError(response: Response, payload: unknown): never {
 
 export class ApiClient {
   private readonly baseUrl: string;
+  public readonly catalogue: CatalogueClient;
 
   constructor(options: ApiClientOptions = {}) {
     this.baseUrl = options.baseUrl ?? (process.env.NEXT_PUBLIC_API_URL || '');
+    this.catalogue = new CatalogueClient(this);
   }
 
-  private async request<T>(endpoint: string, init?: RequestInit): Promise<T> {
+  public async request<T>(endpoint: string, init?: RequestInit): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     const headers = buildHeaders(init);
 
