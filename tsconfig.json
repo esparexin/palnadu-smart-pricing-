@@ -7,5 +7,5 @@
     "erasableSyntaxOnly": true
   },
   "include": ["apps/**/*.ts", "packages/**/*.ts", "scripts/**/*.ts"],
-  "exclude": ["**/dist/**"]
+  "exclude": ["**/dist/**", "**/.next/**", "apps/web/**"]
 }
