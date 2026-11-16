@@ -2,27 +2,30 @@
 
 ## 1. System Architecture & Hosting Topology
 
-Palnadu Smart Pricing is architected as an independent, modular monorepo deployed across cloud services:
+Palnadu Smart Pricing is architected as an independent, modular monorepo deployed across cloud services according to the approved topology:
 
 ```
-[ Public / Admin Client Browser ]
-                │
-                ▼
-      [ apps/web (Next.js 15) ]
-                │
-      (Internal API Proxy)
-                ▼
-      [ apps/api (Fastify 5) ]
-         │              │
-    (Drizzle ORM)  (Local / S3 Storage)
-         ▼              ▼
-[ PostgreSQL / Prisma ] [ Media Storage ]
+[ Customer / Guest Browser ]              [ Admin Client Browser ]
+              │                                        │
+              ▼                                        ▼
+  [ apps/storefront (Vercel) ]             [ apps/admin (Vercel) ]
+              │                                        │
+              └───────────────┬────────────────────────┘
+                              │ (HTTPS REST API / Webhooks)
+                              ▼
+                    [ apps/api (Render) ]
+                       │              │
+                  (Drizzle ORM)  (Cloudinary SDK)
+                       ▼              ▼
+           [ Prisma Postgres DB ]  [ Cloudinary CDN ]
 ```
 
-- **`apps/web`**: Next.js 15 presentation layer providing the public storefront catalogue, quote cart, and authenticated administrative dashboard. Does not interact directly with the database or execute pricing business logic.
-- **`apps/api`**: Fastify 5 REST API handling authentication, role-based access control, catalogue management, quotation calculation snapshots, import/export, and webhook integrations.
+- **`apps/storefront`**: Next.js 15 customer presentation layer deployed to **Vercel**. Provides the public product catalogue with hidden prices/discounts, responsive Quote Cart, and quotation request submission.
+- **`apps/admin`**: Next.js 15 administrative application deployed to **Vercel**. Provides catalogue management, price/discount rule configuration, quotation review & WhatsApp delivery tracking, and system integration settings.
+- **`apps/api`**: Fastify 5 REST API deployed to **Render**. Handles authentication, RBAC, pricing calculations, quotation persistence, and automated Meta WhatsApp Cloud API messaging.
+- **`apps/web`**: Consolidated legacy application retained during migration verification until standalone applications pass acceptance.
 - **`packages/persistence`**: Data access layer built with Drizzle ORM and `postgres.js` driver. Single source of truth for database schemas and migrations.
-- **`packages/contracts`**: Shared Zod schemas and TypeScript contracts consumed by both API and Web layers.
+- **`packages/contracts`**: Shared Zod schemas and TypeScript contracts consumed by all applications.
 - **`packages/server-config`**: Centralized, validated environment configuration schema.
 
 ---
@@ -57,31 +60,34 @@ Palnadu Smart Pricing uses managed PostgreSQL (Prisma Postgres staging instance 
 
 All sensitive secrets must be configured via cloud environment variables (e.g., Render Dashboard Secret Management) and **never** committed to version control.
 
-### 3.1 API Service (`apps/api`)
+### 3.1 API Service (`apps/api` — Render)
 
-| Variable              | Type   | Default       | Description                                                   |
-| --------------------- | ------ | ------------- | ------------------------------------------------------------- |
-| `NODE_ENV`            | String | `development` | Set to `production` in production environments                |
-| `HOST`                | String | `127.0.0.1`   | Network interface (`0.0.0.0` for containerized hosting)       |
-| `PORT`                | Number | `3001`        | HTTP port for Fastify server                                  |
-| `LOG_LEVEL`           | String | `info`        | Logging verbosity (`fatal`, `error`, `warn`, `info`, `debug`) |
-| `DATABASE_URL`        | String | _Required_    | PostgreSQL connection URL (pooled)                            |
-| `DATABASE_DIRECT_URL` | String | _Optional_    | PostgreSQL direct connection URL (for migrations)             |
-| `DB_POOL_MAX`         | Number | `5`           | Maximum pooled database connections                           |
-| `DB_SSL`              | String | `require`     | SSL mode (`require`, `prefer`, `disable`)                     |
-| `SESSION_SECRET`      | String | _Required_    | High-entropy session secret ($\ge 32$ characters)             |
-| `SESSION_TTL_HOURS`   | Number | `12`          | Admin session cookie lifespan                                 |
-| `STORAGE_DRIVER`      | String | `local`       | Media storage driver (`local` or `s3`)                        |
-| `CORS_ORIGIN`         | String | _Optional_    | Allowed web frontend origin for CORS                          |
+| Variable                | Type   | Default       | Description                                                   |
+| ----------------------- | ------ | ------------- | ------------------------------------------------------------- |
+| `NODE_ENV`              | String | `development` | Set to `production` in production environments                |
+| `HOST`                  | String | `127.0.0.1`   | Network interface (`0.0.0.0` on Render)                       |
+| `PORT`                  | Number | `3001`        | HTTP port for Fastify server                                  |
+| `LOG_LEVEL`             | String | `info`        | Logging verbosity (`fatal`, `error`, `warn`, `info`, `debug`) |
+| `DATABASE_URL`          | String | _Required_    | PostgreSQL connection URL (pooled)                            |
+| `DATABASE_DIRECT_URL`   | String | _Optional_    | PostgreSQL direct connection URL (for migrations)             |
+| `DB_POOL_MAX`           | Number | `5`           | Maximum pooled database connections                           |
+| `DB_SSL`                | String | `require`     | SSL mode (`require`, `prefer`, `disable`)                     |
+| `SESSION_SECRET`        | String | _Required_    | High-entropy session secret ($\ge 32$ characters)             |
+| `SESSION_TTL_HOURS`     | Number | `12`          | Admin session cookie lifespan                                 |
+| `ALLOWED_ORIGINS`       | String | _Optional_    | Comma-separated allowed frontend origins for CORS/CSRF        |
+| `STORAGE_DRIVER`        | String | `cloudinary`  | Media storage driver (`memory`, `disk`, or `cloudinary`)      |
+| `CLOUDINARY_CLOUD_NAME` | String | _Optional_    | Cloudinary cloud name for product media storage               |
+| `CLOUDINARY_API_KEY`    | String | _Optional_    | Cloudinary API key                                            |
+| `CLOUDINARY_API_SECRET` | String | _Optional_    | Cloudinary API secret                                         |
 
-### 3.2 Web Service (`apps/web`)
+### 3.2 Frontend Services (`apps/storefront` & `apps/admin` — Vercel)
 
-| Variable              | Type   | Default                 | Description                                      |
-| --------------------- | ------ | ----------------------- | ------------------------------------------------ |
-| `NODE_ENV`            | String | `development`           | Set to `production` in production environments   |
-| `PORT`                | Number | `3000`                  | HTTP port for Next.js server                     |
-| `API_INTERNAL_URL`    | String | `http://127.0.0.1:3001` | Private internal API URL for SSR proxying        |
-| `NEXT_PUBLIC_API_URL` | String | _Optional_              | Public API URL if accessed directly from browser |
+| Variable              | Type   | Default                 | Description                                    |
+| --------------------- | ------ | ----------------------- | ---------------------------------------------- |
+| `NODE_ENV`            | String | `development`           | Set to `production` in production environments |
+| `PORT`                | Number | `3000`                  | HTTP port for Next.js server                   |
+| `API_INTERNAL_URL`    | String | `http://127.0.0.1:3001` | Private internal API URL for SSR proxying      |
+| `NEXT_PUBLIC_API_URL` | String | _Optional_              | Public API URL pointing to Render backend API  |
 
 ---
 
@@ -167,9 +173,9 @@ pg_restore --clean --if-exists --no-owner --no-acl --verbose -d "$DATABASE_DIREC
 
 1. **Pre-flight Checks**: Run all automated quality gates (`check:governance`, `lint`, `typecheck`, `test:unit`, `audit`).
 2. **Database Migration**: Run `pnpm db:migrate` against the target database using `DATABASE_DIRECT_URL`.
-3. **API Deployment**: Deploy `palnadu-api`. Render/hosting waits for `/api/v1/health/ready` before routing traffic.
-4. **Web Deployment**: Deploy `palnadu-web`. Render starts new containers and performs zero-downtime cutover.
-5. **Post-Deployment Verification**: Execute production smoke test suite (`docs/deployment/SMOKE_TESTS.md`).
+3. **API Deployment**: Deploy `palnadu-api` on Render. Render health check verifies `/api/v1/health` and `/api/v1/ready` before routing traffic.
+4. **Frontend Deployments**: Deploy `apps/storefront` and `apps/admin` on Vercel pointing to the deployed Render API endpoint.
+5. **Post-Deployment Verification**: Execute staging smoke test protocol (`docs/deployment/SMOKE_TESTS.md`).
 
 ### 7.2 Immediate Rollback Procedure
 
