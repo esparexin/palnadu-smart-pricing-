@@ -31,3 +31,7 @@ export * from './inventory.schema.js';
 export * from './inventory-config.js';
 export * from './inventory.js';
 export * from './inventory-queries.js';
+export * from './whatsapp.schema.js';
+export * from './whatsapp-crypto.js';
+export * from './whatsapp-service.js';
+export * from './whatsapp-inbound.js';
