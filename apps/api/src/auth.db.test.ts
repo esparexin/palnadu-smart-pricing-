@@ -191,6 +191,7 @@ describe('Admin Authentication API (PostgreSQL Integration)', () => {
       url: '/api/v1/admin/auth/logout',
       headers: {
         host: 'localhost:3001',
+        origin: 'http://localhost:3001',
         cookie: cookieHeader,
       },
     });
@@ -224,6 +225,7 @@ describe('Admin Authentication API (PostgreSQL Integration)', () => {
       url: '/api/v1/admin/auth/logout',
       headers: {
         host: 'localhost:3001',
+        origin: 'http://localhost:3001',
         cookie: cookieHeader,
       },
     });

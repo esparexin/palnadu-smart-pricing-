@@ -6,7 +6,7 @@ services:
     region: singapore
     buildCommand: pnpm install --frozen-lockfile && pnpm --filter @palnadu/server-config build && pnpm --filter @palnadu/contracts build && pnpm --filter @palnadu/persistence build && pnpm --filter @palnadu/api build
     startCommand: node apps/api/dist/main.js
-    healthCheckPath: /api/v1/health/live
+    healthCheckPath: /api/v1/health
     envVars:
       - key: NODE_ENV
         value: production

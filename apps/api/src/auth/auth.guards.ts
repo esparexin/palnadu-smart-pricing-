@@ -89,64 +89,104 @@ export function requireAdminPermission(...requiredPermissions: string[]) {
   };
 }
 
-function parseUrlHost(urlString: string): string | null {
+function parseFullOrigin(urlString: string): { host: string; fullOrigin: string } | null {
   try {
     const parsed = new URL(urlString);
     if (!['http:', 'https:'].includes(parsed.protocol)) {
       return null;
     }
-    return parsed.host.replace(/:(80|443)$/, '').toLowerCase();
+    const host = parsed.host.replace(/:(80|443)$/, '').toLowerCase();
+    const fullOrigin = parsed.origin.replace(/:(80|443)$/, '').toLowerCase();
+    return { host, fullOrigin };
   } catch {
     return null;
   }
 }
 
-export async function validateCsrfProtection(
-  request: FastifyRequest,
-  reply: FastifyReply,
-): Promise<void> {
-  if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
-    return;
+function isOriginAllowed(
+  rawUrl: string,
+  normalizedHost: string,
+  allowedSet: Set<string>,
+): boolean | null {
+  const parsed = parseFullOrigin(rawUrl);
+  if (!parsed) {
+    return null;
   }
-
-  const rawHost = request.headers.host;
-  if (
-    !rawHost ||
-    typeof rawHost !== 'string' ||
-    rawHost.trim().length === 0 ||
-    rawHost.includes(',') ||
-    rawHost.includes(' ')
-  ) {
-    reply.status(400).send(errorResponse('BAD_REQUEST', 'Missing Host header', request.id));
-    return;
-  }
-
-  const normalizedHost = rawHost.replace(/:(80|443)$/, '').toLowerCase();
-  const origin = request.headers.origin;
-
-  if (origin) {
-    const originHost = parseUrlHost(origin);
-    if (!originHost) {
-      reply.status(403).send(errorResponse('CSRF_ERROR', 'Malformed origin header', request.id));
-      return;
-    }
-    if (originHost !== normalizedHost) {
-      reply
-        .status(403)
-        .send(errorResponse('CSRF_ERROR', 'Cross-origin request rejected', request.id));
-      return;
-    }
-  } else if (request.headers.referer) {
-    const refererHost = parseUrlHost(request.headers.referer);
-    if (!refererHost) {
-      reply.status(403).send(errorResponse('CSRF_ERROR', 'Malformed referer header', request.id));
-      return;
-    }
-    if (refererHost !== normalizedHost) {
-      reply
-        .status(403)
-        .send(errorResponse('CSRF_ERROR', 'Cross-origin request rejected', request.id));
-      return;
-    }
-  }
+  return parsed.host === normalizedHost || allowedSet.has(parsed.fullOrigin);
 }
+
+function hasValidSessionCookie(request: FastifyRequest): boolean {
+  const rawCookie = request.cookies[SESSION_COOKIE_NAME];
+  if (!rawCookie) {
+    return false;
+  }
+  const unsigned = request.unsignCookie(rawCookie);
+  return Boolean(unsigned.valid && unsigned.value);
+}
+
+export function createCsrfProtection(allowedOrigins: string[] = []) {
+  const allowedSet = new Set(allowedOrigins.map((o) => o.replace(/:(80|443)$/, '').toLowerCase()));
+
+  return async function validateCsrfProtection(
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ): Promise<void> {
+    if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
+      return;
+    }
+
+    const rawHost = request.headers.host;
+    if (
+      !rawHost ||
+      typeof rawHost !== 'string' ||
+      rawHost.trim().length === 0 ||
+      rawHost.includes(',') ||
+      rawHost.includes(' ')
+    ) {
+      reply.status(400).send(errorResponse('BAD_REQUEST', 'Missing Host header', request.id));
+      return;
+    }
+
+    const normalizedHost = rawHost.replace(/:(80|443)$/, '').toLowerCase();
+    const origin = request.headers.origin;
+
+    if (origin) {
+      const allowed = isOriginAllowed(origin, normalizedHost, allowedSet);
+      if (allowed === null) {
+        reply.status(403).send(errorResponse('CSRF_ERROR', 'Malformed origin header', request.id));
+        return;
+      }
+      if (!allowed) {
+        reply
+          .status(403)
+          .send(errorResponse('CSRF_ERROR', 'Cross-origin request rejected', request.id));
+        return;
+      }
+    } else if (request.headers.referer) {
+      const allowed = isOriginAllowed(request.headers.referer, normalizedHost, allowedSet);
+      if (allowed === null) {
+        reply.status(403).send(errorResponse('CSRF_ERROR', 'Malformed referer header', request.id));
+        return;
+      }
+      if (!allowed) {
+        reply
+          .status(403)
+          .send(errorResponse('CSRF_ERROR', 'Cross-origin request rejected', request.id));
+        return;
+      }
+    } else if (hasValidSessionCookie(request)) {
+      reply
+        .status(403)
+        .send(
+          errorResponse(
+            'CSRF_ERROR',
+            'State-changing request with session cookie requires Origin or Referer header',
+            request.id,
+          ),
+        );
+      return;
+    }
+  };
+}
+
+export const validateCsrfProtection = createCsrfProtection([]);

@@ -27,6 +27,11 @@ const serverConfigSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65_535).default(3001),
   SESSION_SECRET: z.string().trim().optional(),
   SESSION_TTL_HOURS: z.coerce.number().int().min(1).max(168).default(12),
+  ALLOWED_ORIGINS: z.string().trim().optional(),
+  STORAGE_DRIVER: z.enum(['memory', 'disk', 'cloudinary']).default('memory'),
+  CLOUDINARY_CLOUD_NAME: z.string().trim().optional(),
+  CLOUDINARY_API_KEY: z.string().trim().optional(),
+  CLOUDINARY_API_SECRET: z.string().trim().optional(),
 });
 
 export interface ServerConfig {
@@ -40,6 +45,102 @@ export interface ServerConfig {
   port: number;
   sessionSecret: string;
   sessionTtlHours: number;
+  allowedOrigins: string[];
+  storageDriver: 'memory' | 'disk' | 'cloudinary';
+  cloudinary?: {
+    cloudName: string;
+    apiKey: string;
+    apiSecret: string;
+  };
+}
+
+export function parseAllowedOrigins(raw: string | undefined, nodeEnv: string): string[] {
+  if (!raw || raw.trim().length === 0) {
+    return [];
+  }
+  const origins = raw
+    .split(',')
+    .map((o) => o.trim())
+    .filter((o) => o.length > 0);
+
+  return origins.map((originStr) => {
+    if (originStr === '*') {
+      if (nodeEnv === 'production') {
+        throw new Error(
+          'Invalid server configuration: ALLOWED_ORIGINS cannot contain wildcard in production',
+        );
+      }
+      return '*';
+    }
+    let url: URL;
+    try {
+      url = new URL(originStr);
+    } catch {
+      throw new Error(
+        `Invalid server configuration: ALLOWED_ORIGINS: invalid origin "${originStr}"`,
+      );
+    }
+    if (!['http:', 'https:'].includes(url.protocol)) {
+      throw new Error(
+        `Invalid server configuration: ALLOWED_ORIGINS: origin "${originStr}" must use http or https`,
+      );
+    }
+    if (nodeEnv === 'production' && url.protocol !== 'https:') {
+      throw new Error(
+        `Invalid server configuration: ALLOWED_ORIGINS: origin "${originStr}" must use https in production`,
+      );
+    }
+    return url.origin.toLowerCase();
+  });
+}
+
+function resolveSessionSecret(nodeEnv: string, effectiveSecret?: string): string {
+  if (nodeEnv === 'production') {
+    if (!effectiveSecret) {
+      throw new Error(
+        'Invalid server configuration: SESSION_SECRET: SESSION_SECRET is required in production',
+      );
+    }
+    if (effectiveSecret.length < 32) {
+      throw new Error(
+        'Invalid server configuration: SESSION_SECRET: SESSION_SECRET must be at least 32 characters in production',
+      );
+    }
+    if (effectiveSecret === DEV_SESSION_SECRET || effectiveSecret === TEST_SESSION_SECRET) {
+      throw new Error(
+        'Invalid server configuration: SESSION_SECRET: SESSION_SECRET cannot use development or test defaults in production',
+      );
+    }
+    return effectiveSecret;
+  }
+
+  if (effectiveSecret) {
+    if (effectiveSecret.length < 32) {
+      throw new Error(
+        'Invalid server configuration: SESSION_SECRET: SESSION_SECRET must be at least 32 characters if specified',
+      );
+    }
+    return effectiveSecret;
+  }
+
+  return nodeEnv === 'test' ? TEST_SESSION_SECRET : DEV_SESSION_SECRET;
+}
+
+function resolveCloudinaryConfig(
+  driver: 'memory' | 'disk' | 'cloudinary',
+  name?: string,
+  key?: string,
+  secret?: string,
+): ServerConfig['cloudinary'] {
+  if (driver !== 'cloudinary') {
+    return undefined;
+  }
+  if (!name || !key || !secret) {
+    throw new Error(
+      'Invalid server configuration: STORAGE_DRIVER is cloudinary but CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, or CLOUDINARY_API_SECRET is missing',
+    );
+  }
+  return { cloudName: name, apiKey: key, apiSecret: secret };
 }
 
 export function parseServerConfig(environment: Record<string, string | undefined>): ServerConfig {
@@ -65,52 +166,22 @@ export function parseServerConfig(environment: Record<string, string | undefined
     PORT,
     SESSION_SECRET,
     SESSION_TTL_HOURS,
+    ALLOWED_ORIGINS,
+    STORAGE_DRIVER,
+    CLOUDINARY_CLOUD_NAME,
+    CLOUDINARY_API_KEY,
+    CLOUDINARY_API_SECRET,
   } = parsed.data;
 
   const effectiveSecret = SESSION_SECRET && SESSION_SECRET.length > 0 ? SESSION_SECRET : undefined;
-  let sessionSecret: string;
-
-  if (NODE_ENV === 'production') {
-    if (!effectiveSecret) {
-      throw new Error(
-        'Invalid server configuration: SESSION_SECRET: SESSION_SECRET is required in production',
-      );
-    }
-    if (effectiveSecret.length < 32) {
-      throw new Error(
-        'Invalid server configuration: SESSION_SECRET: SESSION_SECRET must be at least 32 characters in production',
-      );
-    }
-    if (effectiveSecret === DEV_SESSION_SECRET || effectiveSecret === TEST_SESSION_SECRET) {
-      throw new Error(
-        'Invalid server configuration: SESSION_SECRET: SESSION_SECRET cannot use development or test defaults in production',
-      );
-    }
-    sessionSecret = effectiveSecret;
-  } else if (NODE_ENV === 'test') {
-    if (effectiveSecret) {
-      if (effectiveSecret.length < 32) {
-        throw new Error(
-          'Invalid server configuration: SESSION_SECRET: SESSION_SECRET must be at least 32 characters if specified',
-        );
-      }
-      sessionSecret = effectiveSecret;
-    } else {
-      sessionSecret = TEST_SESSION_SECRET;
-    }
-  } else {
-    // development
-    if (effectiveSecret) {
-      if (effectiveSecret.length < 32) {
-        throw new Error(
-          'Invalid server configuration: SESSION_SECRET: SESSION_SECRET must be at least 32 characters if specified',
-        );
-      }
-      sessionSecret = effectiveSecret;
-    } else {
-      sessionSecret = DEV_SESSION_SECRET;
-    }
-  }
+  const sessionSecret = resolveSessionSecret(NODE_ENV, effectiveSecret);
+  const allowedOrigins = parseAllowedOrigins(ALLOWED_ORIGINS, NODE_ENV);
+  const cloudinary = resolveCloudinaryConfig(
+    STORAGE_DRIVER,
+    CLOUDINARY_CLOUD_NAME,
+    CLOUDINARY_API_KEY,
+    CLOUDINARY_API_SECRET,
+  );
 
   return {
     databaseUrl: DATABASE_URL,
@@ -123,5 +194,8 @@ export function parseServerConfig(environment: Record<string, string | undefined
     port: PORT,
     sessionSecret,
     sessionTtlHours: SESSION_TTL_HOURS,
+    allowedOrigins,
+    storageDriver: STORAGE_DRIVER,
+    cloudinary,
   };
 }

@@ -14,6 +14,9 @@ describe('parseServerConfig', () => {
       port: 3001,
       sessionSecret: DEV_SESSION_SECRET,
       sessionTtlHours: 12,
+      allowedOrigins: [],
+      storageDriver: 'memory',
+      cloudinary: undefined,
     });
   });
 
@@ -165,5 +168,63 @@ describe('parseServerConfig', () => {
         DATABASE_DIRECT_URL: 'mysql://user:pass@localhost:3306/db',
       }),
     ).toThrow('DATABASE_DIRECT_URL');
+  });
+
+  it('parses ALLOWED_ORIGINS safely and normalizes URLs', () => {
+    const config = parseServerConfig({
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/catalog',
+      ALLOWED_ORIGINS: 'https://admin.vercel.app, https://storefront.vercel.app/',
+    });
+    expect(config.allowedOrigins).toEqual([
+      'https://admin.vercel.app',
+      'https://storefront.vercel.app',
+    ]);
+  });
+
+  it('rejects wildcard origin in production', () => {
+    expect(() =>
+      parseServerConfig({
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/catalog',
+        NODE_ENV: 'production',
+        SESSION_SECRET: 'super-secure-production-secret-value-32chars!',
+        ALLOWED_ORIGINS: '*',
+      }),
+    ).toThrow('ALLOWED_ORIGINS cannot contain wildcard in production');
+  });
+
+  it('rejects http non-secure origins in production', () => {
+    expect(() =>
+      parseServerConfig({
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/catalog',
+        NODE_ENV: 'production',
+        SESSION_SECRET: 'super-secure-production-secret-value-32chars!',
+        ALLOWED_ORIGINS: 'http://admin.example.com',
+      }),
+    ).toThrow('must use https in production');
+  });
+
+  it('configures Cloudinary when STORAGE_DRIVER is cloudinary', () => {
+    const config = parseServerConfig({
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/catalog',
+      STORAGE_DRIVER: 'cloudinary',
+      CLOUDINARY_CLOUD_NAME: 'test-cloud',
+      CLOUDINARY_API_KEY: 'test-key',
+      CLOUDINARY_API_SECRET: 'test-secret',
+    });
+    expect(config.storageDriver).toBe('cloudinary');
+    expect(config.cloudinary).toEqual({
+      cloudName: 'test-cloud',
+      apiKey: 'test-key',
+      apiSecret: 'test-secret',
+    });
+  });
+
+  it('rejects STORAGE_DRIVER cloudinary when credentials are missing', () => {
+    expect(() =>
+      parseServerConfig({
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/catalog',
+        STORAGE_DRIVER: 'cloudinary',
+      }),
+    ).toThrow('CLOUDINARY_CLOUD_NAME');
   });
 });
