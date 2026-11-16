@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../../context/auth-context';
 import { apiClient } from '../../lib/api-client';
+import { QuotationCommercialSummary } from '../../components/admin/quotation-commercial-summary';
 
 interface ModuleConfig {
   title: string;
@@ -69,6 +70,10 @@ export default function AdminDashboardPage() {
 
   const canReadCatalogue = hasPermission('catalogue:read') || hasPermission('catalogue:manage');
   const canManageCatalogue = hasPermission('catalogue:manage');
+  const canReadQuotations =
+    hasPermission('quotations:read') ||
+    hasPermission('quotations:manage') ||
+    hasPermission('admin:manage');
 
   return (
     <div className="space-y-6">
@@ -142,6 +147,8 @@ export default function AdminDashboardPage() {
           )}
         </div>
       </div>
+
+      {canReadQuotations && <QuotationCommercialSummary />}
 
       <div>
         <h2 className="font-semibold text-lg text-slate-900">Catalogue Management Modules</h2>
