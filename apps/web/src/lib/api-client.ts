@@ -14,6 +14,7 @@ import { SettingsClient } from './settings-client';
 import { MediaClient } from './media-client';
 import { InventoryClient } from './inventory-client';
 import { WhatsAppClient } from './whatsapp-client';
+import { IntegrationsClient } from './integrations-client';
 
 export class ApiClientError extends Error {
   public readonly status: number;
@@ -73,6 +74,7 @@ export class ApiClient {
   public readonly media: MediaClient;
   public readonly inventory: InventoryClient;
   public readonly whatsapp: WhatsAppClient;
+  public readonly integrations: IntegrationsClient;
 
   constructor(options: ApiClientOptions = {}) {
     this.baseUrl = options.baseUrl ?? (process.env.NEXT_PUBLIC_API_URL || '');
@@ -83,6 +85,7 @@ export class ApiClient {
     this.media = new MediaClient(this);
     this.inventory = new InventoryClient(this);
     this.whatsapp = new WhatsAppClient(this);
+    this.integrations = new IntegrationsClient(this);
   }
 
   public async request<T>(endpoint: string, init?: RequestInit): Promise<T> {

@@ -64,6 +64,13 @@
       "when": 1794808532669,
       "tag": "0008_talented_dakota_north",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794811044542,
+      "tag": "0009_spicy_rick_jones",
+      "breakpoints": true
     }
   ]
 }
