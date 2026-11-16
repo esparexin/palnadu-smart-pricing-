@@ -16,3 +16,5 @@ export * from './public-catalogue-hydration.js';
 export * from './quotations.js';
 export * from './quotation-calculation.js';
 export * from './company-settings.js';
+export * from './storage.js';
+export * from './image-processing.js';
