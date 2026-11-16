@@ -16,7 +16,7 @@ import cookie from '@fastify/cookie';
 import rateLimit from '@fastify/rate-limit';
 import type { ServerConfig } from '@palnadu/server-config';
 
-import type { DatabaseClient } from '@palnadu/persistence';
+import type { DatabaseClient, StoragePort } from '@palnadu/persistence';
 import {
   authPlugin,
   requireAdminAuth,
@@ -27,10 +27,12 @@ import {
 import { cataloguePlugin } from './catalogue/catalogue.plugin.js';
 import { quotationsPlugin } from './quotations/quotations.plugin.js';
 import { settingsPlugin } from './settings/settings.plugin.js';
+import { mediaPlugin } from './media/media.plugin.js';
 
 export interface ApiDependencies {
   config: ServerConfig;
   database: DatabaseClient;
+  storage?: StoragePort;
 }
 
 function getStatusCode(error: unknown): number | undefined {
@@ -95,7 +97,7 @@ export const LOGGER_REDACT_PATHS = [
   '*.token',
 ] as const;
 
-export async function buildServer({ config, database }: ApiDependencies) {
+export async function buildServer({ config, database, storage }: ApiDependencies) {
   const app = Fastify({
     logger: {
       level: config.logLevel,
@@ -229,6 +231,7 @@ export async function buildServer({ config, database }: ApiDependencies) {
   await app.register(cataloguePlugin, { config, database });
   await app.register(quotationsPlugin, { config, database });
   await app.register(settingsPlugin, { config, database });
+  await app.register(mediaPlugin, { config, database, storage });
 
   return app;
 }

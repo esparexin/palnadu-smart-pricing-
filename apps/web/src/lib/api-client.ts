@@ -11,6 +11,7 @@ import { CatalogueClient } from './catalogue-client';
 import { StorefrontClient } from './storefront-client';
 import { QuotationsClient } from './quotations-client';
 import { SettingsClient } from './settings-client';
+import { MediaClient } from './media-client';
 
 export class ApiClientError extends Error {
   public readonly status: number;
@@ -35,7 +36,8 @@ function buildHeaders(init?: RequestInit): Headers {
   if (!headers.has('Accept')) {
     headers.set('Accept', 'application/json');
   }
-  if (init?.body && !headers.has('Content-Type')) {
+  const isFormData = typeof FormData !== 'undefined' && init?.body instanceof FormData;
+  if (init?.body && !headers.has('Content-Type') && !isFormData) {
     headers.set('Content-Type', 'application/json');
   }
   return headers;
@@ -66,6 +68,7 @@ export class ApiClient {
   public readonly storefront: StorefrontClient;
   public readonly quotations: QuotationsClient;
   public readonly settings: SettingsClient;
+  public readonly media: MediaClient;
 
   constructor(options: ApiClientOptions = {}) {
     this.baseUrl = options.baseUrl ?? (process.env.NEXT_PUBLIC_API_URL || '');
@@ -73,6 +76,7 @@ export class ApiClient {
     this.storefront = new StorefrontClient(this);
     this.quotations = new QuotationsClient(this);
     this.settings = new SettingsClient(this);
+    this.media = new MediaClient(this);
   }
 
   public async request<T>(endpoint: string, init?: RequestInit): Promise<T> {
