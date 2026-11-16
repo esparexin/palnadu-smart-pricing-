@@ -29,6 +29,7 @@ import { quotationsPlugin } from './quotations/quotations.plugin.js';
 import { settingsPlugin } from './settings/settings.plugin.js';
 import { mediaPlugin } from './media/media.plugin.js';
 import { importExportPlugin } from './import-export/import-export.plugin.js';
+import { inventoryPlugin } from './inventory/inventory.plugin.js';
 
 export interface ApiDependencies {
   config: ServerConfig;
@@ -234,6 +235,7 @@ export async function buildServer({ config, database, storage }: ApiDependencies
   await app.register(settingsPlugin, { config, database });
   await app.register(mediaPlugin, { config, database, storage });
   await app.register(importExportPlugin, { config, database });
+  await app.register(inventoryPlugin, { config, database });
 
   return app;
 }

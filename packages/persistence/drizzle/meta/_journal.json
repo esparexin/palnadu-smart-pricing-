@@ -50,6 +50,13 @@
       "when": 1794803137365,
       "tag": "0006_short_bruce_banner",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794806081854,
+      "tag": "0007_charming_falcon",
+      "breakpoints": true
     }
   ]
 }

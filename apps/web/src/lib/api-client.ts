@@ -12,6 +12,7 @@ import { StorefrontClient } from './storefront-client';
 import { QuotationsClient } from './quotations-client';
 import { SettingsClient } from './settings-client';
 import { MediaClient } from './media-client';
+import { InventoryClient } from './inventory-client';
 
 export class ApiClientError extends Error {
   public readonly status: number;
@@ -69,6 +70,7 @@ export class ApiClient {
   public readonly quotations: QuotationsClient;
   public readonly settings: SettingsClient;
   public readonly media: MediaClient;
+  public readonly inventory: InventoryClient;
 
   constructor(options: ApiClientOptions = {}) {
     this.baseUrl = options.baseUrl ?? (process.env.NEXT_PUBLIC_API_URL || '');
@@ -77,6 +79,7 @@ export class ApiClient {
     this.quotations = new QuotationsClient(this);
     this.settings = new SettingsClient(this);
     this.media = new MediaClient(this);
+    this.inventory = new InventoryClient(this);
   }
 
   public async request<T>(endpoint: string, init?: RequestInit): Promise<T> {

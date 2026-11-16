@@ -27,3 +27,7 @@ export * from './import-template.js';
 export * from './import-service.js';
 export * from './import-commit-service.js';
 export * from './export-service.js';
+export * from './inventory.schema.js';
+export * from './inventory-config.js';
+export * from './inventory.js';
+export * from './inventory-queries.js';
