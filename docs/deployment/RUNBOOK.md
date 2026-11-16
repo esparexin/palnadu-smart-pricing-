@@ -144,7 +144,7 @@ pg_restore --clean --if-exists --no-owner --no-acl --verbose -d "$DATABASE_DIREC
 
 ### 6.1 Probes
 
-- **Liveness Probe**: `GET /api/v1/health/live`
+- **Liveness Probe**: `GET /api/v1/health`
   - Responds with HTTP `200 OK` `{ "status": "ok" }`.
   - Verifies that the Fastify Node.js event loop is healthy and responding to requests.
 - **Readiness Probe**: `GET /api/v1/health/ready`
