@@ -29,6 +29,13 @@
       "when": 1794794451832,
       "tag": "0003_dear_swarm",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794797050832,
+      "tag": "0004_numerous_wasp",
+      "breakpoints": true
     }
   ]
 }

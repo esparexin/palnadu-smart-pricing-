@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PricingDiscountTypeSchema } from './pricing.js';
+import { CompanyProfileSchema } from './company-settings.js';
 
 export const QuotationStatusSchema = z.enum([
   'submitted',
@@ -74,6 +75,7 @@ export const AdminQuotationDetailSchema = z
     discountTotalPaise: z.number().int().nonnegative(),
     grandTotalPaise: z.number().int().nonnegative(),
     items: z.array(QuotationLineItemDtoSchema),
+    companySnapshot: CompanyProfileSchema.nullable().optional(),
     createdAt: z.string().datetime(),
     updatedAt: z.string().datetime(),
   })

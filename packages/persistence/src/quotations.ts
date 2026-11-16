@@ -2,10 +2,12 @@ import { and, count, desc, eq, ilike, inArray, or } from 'drizzle-orm';
 import type {
   AdminQuotationDetail,
   AdminQuotationListQuery,
+  CompanyProfile,
   CustomerEnquiryCreate,
   QuotationLineItemDto,
   QuotationStatus,
 } from '@palnadu/contracts';
+import { getCompanyProfile } from './company-settings.js';
 import type { DbExecutor } from './client.js';
 import { calculateQuotationLines, generateReferenceNumber } from './quotation-calculation.js';
 import { products, productVariants, quotationItems, quotationRequests } from './schema.js';
@@ -138,6 +140,7 @@ export async function findQuotationById(
     discountTotalPaise: quotation.discountTotalPaise,
     grandTotalPaise: quotation.grandTotalPaise,
     items,
+    companySnapshot: (quotation.companySnapshot as CompanyProfile | null) ?? null,
     createdAt: quotation.createdAt.toISOString(),
     updatedAt: quotation.updatedAt.toISOString(),
   };
@@ -192,9 +195,29 @@ export async function updateQuotationStatus(
   id: string,
   status: QuotationStatus,
 ): Promise<AdminQuotationDetail | null> {
+  const current = await db
+    .select()
+    .from(quotationRequests)
+    .where(eq(quotationRequests.id, id))
+    .limit(1);
+  if (!current.length || !current[0]) return null;
+
+  let snapshot = current[0].companySnapshot;
+  if (status === 'issued' && !snapshot) {
+    try {
+      snapshot = (await getCompanyProfile(db as never)) as unknown as Record<string, unknown>;
+    } catch {
+      // Ignore profile resolution error if running without company profile
+    }
+  }
+
   const [updated] = await db
     .update(quotationRequests)
-    .set({ status, updatedAt: new Date() })
+    .set({
+      status,
+      companySnapshot: snapshot,
+      updatedAt: new Date(),
+    })
     .where(eq(quotationRequests.id, id))
     .returning();
 
