@@ -31,6 +31,7 @@ import { mediaPlugin } from './media/media.plugin.js';
 import { importExportPlugin } from './import-export/import-export.plugin.js';
 import { inventoryPlugin } from './inventory/inventory.plugin.js';
 import { whatsappPlugin } from './whatsapp/whatsapp.plugin.js';
+import { integrationsPlugin } from './integrations/integrations.plugin.js';
 
 export interface ApiDependencies {
   config: ServerConfig;
@@ -238,6 +239,7 @@ export async function buildServer({ config, database, storage }: ApiDependencies
   await app.register(importExportPlugin, { config, database });
   await app.register(inventoryPlugin, { config, database });
   await app.register(whatsappPlugin, { config, database });
+  await app.register(integrationsPlugin, { config, database });
 
   return app;
 }

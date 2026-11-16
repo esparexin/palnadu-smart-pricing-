@@ -90,3 +90,4 @@ export * from './image-discovery.js';
 export * from './import-export.js';
 export * from './inventory.js';
 export * from './whatsapp.js';
+export * from './integrations.js';
