@@ -10,6 +10,15 @@ export const QuotationStatusSchema = z.enum([
   'rejected',
 ]);
 
+export const QuotationDeliveryStatusSchema = z.enum([
+  'not_applicable',
+  'pending',
+  'sent',
+  'delivered',
+  'failed',
+]);
+export type QuotationDeliveryStatus = z.infer<typeof QuotationDeliveryStatusSchema>;
+
 export const CustomerEnquiryItemSchema = z
   .object({
     productId: z.string().uuid(),
@@ -33,6 +42,7 @@ export const CustomerEnquiryResponseSchema = z
   .object({
     referenceNumber: z.string(),
     status: z.literal('submitted'),
+    deliveryStatus: QuotationDeliveryStatusSchema.default('not_applicable'),
     createdAt: z.string().datetime(),
   })
   .strict();
@@ -67,6 +77,11 @@ export const AdminQuotationDetailSchema = z
     customerPhone: z.string().nullable(),
     customerNotes: z.string().nullable(),
     status: QuotationStatusSchema,
+    deliveryStatus: QuotationDeliveryStatusSchema.default('not_applicable'),
+    deliveryProviderId: z.string().nullable().optional(),
+    deliveryError: z.string().nullable().optional(),
+    deliveryAttempts: z.number().int().default(0),
+    lastDeliveryAttemptAt: z.string().datetime().nullable().optional(),
     subtotalPaise: z.number().int().nonnegative(),
     discountTotalPaise: z.number().int().nonnegative(),
     grandTotalPaise: z.number().int().nonnegative(),

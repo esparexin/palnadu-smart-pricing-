@@ -71,6 +71,13 @@
       "when": 1794811044542,
       "tag": "0009_spicy_rick_jones",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794837450013,
+      "tag": "0010_concerned_namor",
+      "breakpoints": true
     }
   ]
 }

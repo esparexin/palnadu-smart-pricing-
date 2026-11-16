@@ -55,7 +55,11 @@ describe('WhatsApp API Endpoints', () => {
       }),
       update: () => ({
         set: (_vals: Record<string, unknown>) => ({
-          where: () => Promise.resolve({ count: 1 }),
+          where: () => {
+            const res = Promise.resolve({ count: 1 }) as unknown as Record<string, unknown>;
+            res.returning = () => Promise.resolve([{ quotationId: null }]);
+            return res;
+          },
         }),
       }),
       delete: () => ({
