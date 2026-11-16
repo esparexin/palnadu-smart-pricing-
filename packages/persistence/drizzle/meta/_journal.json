@@ -22,6 +22,13 @@
       "when": 1794743825917,
       "tag": "0002_rainy_franklin_richards",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794794451832,
+      "tag": "0003_dear_swarm",
+      "breakpoints": true
     }
   ]
 }

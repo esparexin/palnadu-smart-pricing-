@@ -25,6 +25,7 @@ import {
   SESSION_COOKIE_NAME,
 } from './auth/auth.plugin.js';
 import { cataloguePlugin } from './catalogue/catalogue.plugin.js';
+import { quotationsPlugin } from './quotations/quotations.plugin.js';
 
 export interface ApiDependencies {
   config: ServerConfig;
@@ -225,6 +226,7 @@ export async function buildServer({ config, database }: ApiDependencies) {
 
   await app.register(authPlugin, { config, database });
   await app.register(cataloguePlugin, { config, database });
+  await app.register(quotationsPlugin, { config, database });
 
   return app;
 }
