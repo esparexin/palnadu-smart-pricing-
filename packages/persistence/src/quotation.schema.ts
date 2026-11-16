@@ -4,6 +4,7 @@ import {
   check,
   index,
   integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -31,6 +32,7 @@ export const quotationRequests = pgTable(
     subtotalPaise: bigint('subtotal_paise', { mode: 'number' }).default(0).notNull(),
     discountTotalPaise: bigint('discount_total_paise', { mode: 'number' }).default(0).notNull(),
     grandTotalPaise: bigint('grand_total_paise', { mode: 'number' }).default(0).notNull(),
+    companySnapshot: jsonb('company_snapshot'),
     ...timestamps,
   },
   (table) => [

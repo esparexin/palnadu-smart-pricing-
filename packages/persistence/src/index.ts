@@ -15,3 +15,4 @@ export * from './public-catalogue.js';
 export * from './public-catalogue-hydration.js';
 export * from './quotations.js';
 export * from './quotation-calculation.js';
+export * from './company-settings.js';

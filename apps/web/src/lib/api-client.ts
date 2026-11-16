@@ -9,6 +9,8 @@ import type {
 } from '@palnadu/contracts';
 import { CatalogueClient } from './catalogue-client';
 import { StorefrontClient } from './storefront-client';
+import { QuotationsClient } from './quotations-client';
+import { SettingsClient } from './settings-client';
 
 export class ApiClientError extends Error {
   public readonly status: number;
@@ -62,11 +64,15 @@ export class ApiClient {
   private readonly baseUrl: string;
   public readonly catalogue: CatalogueClient;
   public readonly storefront: StorefrontClient;
+  public readonly quotations: QuotationsClient;
+  public readonly settings: SettingsClient;
 
   constructor(options: ApiClientOptions = {}) {
     this.baseUrl = options.baseUrl ?? (process.env.NEXT_PUBLIC_API_URL || '');
     this.catalogue = new CatalogueClient(this);
     this.storefront = new StorefrontClient(this);
+    this.quotations = new QuotationsClient(this);
+    this.settings = new SettingsClient(this);
   }
 
   public async request<T>(endpoint: string, init?: RequestInit): Promise<T> {
