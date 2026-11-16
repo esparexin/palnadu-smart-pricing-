@@ -27,11 +27,7 @@ export const CustomerEnquiryCreateSchema = z
     items: z.array(CustomerEnquiryItemSchema).min(1).max(100),
     idempotencyKey: z.string().trim().max(128).nullable().optional(),
   })
-  .strict()
-  .refine((data) => data.customerEmail || data.customerPhone, {
-    message: 'Either email or phone must be provided to submit a quotation request',
-    path: ['customerPhone'],
-  });
+  .strict();
 
 export const CustomerEnquiryResponseSchema = z
   .object({
