@@ -18,3 +18,5 @@ export * from './quotation-calculation.js';
 export * from './company-settings.js';
 export * from './storage.js';
 export * from './image-processing.js';
+export * from './catalogue-image-discovery.js';
+export * from './image-discovery.js';

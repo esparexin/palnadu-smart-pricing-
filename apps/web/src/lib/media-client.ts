@@ -1,4 +1,8 @@
-import type { ImageResponse } from '@palnadu/contracts';
+import type {
+  ApproveCandidateRequest,
+  ImageCandidateResponse,
+  ImageResponse,
+} from '@palnadu/contracts';
 
 export interface RequestExecutor {
   request<T>(endpoint: string, init?: RequestInit): Promise<T>;
@@ -57,6 +61,44 @@ export class MediaClient {
       {
         method: 'POST',
         body: formData,
+      },
+    );
+  }
+
+  public discoverImages(productId: string): Promise<ImageCandidateResponse[]> {
+    return this.executor.request<ImageCandidateResponse[]>(
+      `/api/v1/admin/products/${productId}/images/discover`,
+      {
+        method: 'POST',
+      },
+    );
+  }
+
+  public listCandidates(productId: string): Promise<ImageCandidateResponse[]> {
+    return this.executor.request<ImageCandidateResponse[]>(
+      `/api/v1/admin/products/${productId}/image-candidates`,
+    );
+  }
+
+  public approveCandidate(
+    productId: string,
+    candidateId: string,
+    options?: ApproveCandidateRequest,
+  ): Promise<{ candidate: ImageCandidateResponse; image: ImageResponse }> {
+    return this.executor.request<{ candidate: ImageCandidateResponse; image: ImageResponse }>(
+      `/api/v1/admin/products/${productId}/image-candidates/${candidateId}/approve`,
+      {
+        method: 'POST',
+        body: JSON.stringify(options ?? {}),
+      },
+    );
+  }
+
+  public rejectCandidate(productId: string, candidateId: string): Promise<{ success: boolean }> {
+    return this.executor.request<{ success: boolean }>(
+      `/api/v1/admin/products/${productId}/image-candidates/${candidateId}/reject`,
+      {
+        method: 'POST',
       },
     );
   }
