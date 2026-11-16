@@ -1,15 +1,42 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import type { PublicProductDto } from '@palnadu/contracts';
+import { useBasket } from '../../context/basket-context';
 
 export interface ProductCardProps {
   product: PublicProductDto;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+  const { addItem, items } = useBasket();
+  const [added, setAdded] = useState(false);
+
   const primaryImage = product.images.find((img) => img.isPrimary) ?? product.images[0];
+  const hasVariants = product.variants.length > 0;
+  const isInBasket = items.some((i) => i.productId === product.id);
+
+  const handleQuickAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem(
+      {
+        productId: product.id,
+        productName: product.name,
+        productSlug: product.slug,
+        model: product.model,
+        unit: product.unit,
+        variantId: null,
+        variantModel: null,
+        sku: null,
+        imageUrl: primaryImage?.url ?? null,
+      },
+      1,
+    );
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+  };
 
   return (
     <article className="group flex flex-col justify-between overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md hover:border-slate-300">
@@ -73,12 +100,30 @@ export function ProductCard({ product }: ProductCardProps) {
 
       {/* Action Footer */}
       <div className="border-t border-slate-100 p-4 pt-3">
-        <Link
-          href={`/products/${product.slug}`}
-          className="flex min-h-[44px] w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          View Specifications
-        </Link>
+        {hasVariants ? (
+          <Link
+            href={`/products/${product.slug}`}
+            className="flex min-h-[44px] w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Select Configuration ({product.variants.length} Options)
+          </Link>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            <Link
+              href={`/products/${product.slug}`}
+              className="flex min-h-[44px] items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+            >
+              View Specs
+            </Link>
+            <button
+              type="button"
+              onClick={handleQuickAdd}
+              className="flex min-h-[44px] items-center justify-center rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+            >
+              {added ? '✓ Added' : isInBasket ? '+ Add More' : 'Add to Quote'}
+            </button>
+          </div>
+        )}
       </div>
     </article>
   );

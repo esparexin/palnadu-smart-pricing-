@@ -46,4 +46,17 @@ describe('StorefrontClient', () => {
       '/api/v1/public/products/prod-123/recommendations',
     );
   });
+
+  it('calls submitEnquiry with POST payload', async () => {
+    const payload = {
+      customerName: 'Kalyan Medaboina',
+      customerPhone: '+919876543210',
+      items: [{ productId: 'prod-123', quantity: 2 }],
+    };
+    await client.submitEnquiry(payload);
+    expect(mockExecutor.request).toHaveBeenCalledWith('/api/v1/public/enquiries', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  });
 });

@@ -1,6 +1,8 @@
 import type {
   BrandResponse,
   CategoryResponse,
+  CustomerEnquiryCreate,
+  CustomerEnquiryResponse,
   PublicProductDto,
   PublicProductListResponse,
   PublicProductQuery,
@@ -52,5 +54,12 @@ export class StorefrontClient {
     return this.executor.request<PublicRecommendationListResponse>(
       `/api/v1/public/products/${encodeURIComponent(productId)}/recommendations`,
     );
+  }
+
+  public submitEnquiry(data: CustomerEnquiryCreate): Promise<CustomerEnquiryResponse> {
+    return this.executor.request<CustomerEnquiryResponse>('/api/v1/public/enquiries', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   }
 }
