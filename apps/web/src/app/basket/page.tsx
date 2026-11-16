@@ -16,6 +16,7 @@ export default function BasketPage() {
   const [submittedResult, setSubmittedResult] = useState<CustomerEnquiryResponse | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submissionIdempotencyKey, setSubmissionIdempotencyKey] = useState<string | null>(null);
 
   const handleSubmitEnquiry = async (formData: {
     customerName: string;
@@ -26,7 +27,12 @@ export default function BasketPage() {
     setIsSubmitting(true);
     setSubmitError(null);
 
-    const idempotencyKey = `quote-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const activeIdempotencyKey =
+      submissionIdempotencyKey ||
+      `quote-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    if (!submissionIdempotencyKey) {
+      setSubmissionIdempotencyKey(activeIdempotencyKey);
+    }
 
     try {
       const result = await apiClient.storefront.submitEnquiry({
@@ -34,7 +40,7 @@ export default function BasketPage() {
         customerEmail: formData.customerEmail || null,
         customerPhone: formData.customerPhone || null,
         customerNotes: formData.customerNotes || null,
-        idempotencyKey,
+        idempotencyKey: activeIdempotencyKey,
         items: items.map((i) => ({
           productId: i.productId,
           variantId: i.variantId || null,
@@ -43,6 +49,7 @@ export default function BasketPage() {
       });
 
       setSubmittedResult(result);
+      setSubmissionIdempotencyKey(null);
       clearBasket();
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Failed to submit quotation enquiry');
@@ -69,7 +76,10 @@ export default function BasketPage() {
           <BasketSuccessView
             referenceNumber={submittedResult.referenceNumber}
             createdAt={submittedResult.createdAt}
-            onNewEnquiry={() => setSubmittedResult(null)}
+            onNewEnquiry={() => {
+              setSubmittedResult(null);
+              setSubmissionIdempotencyKey(null);
+            }}
           />
         ) : !isMounted ? (
           <div className="py-12 text-center text-sm text-slate-500">Loading basket...</div>

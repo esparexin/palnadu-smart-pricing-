@@ -18,67 +18,90 @@ export async function createQuotationEnquiry(
   db: DbExecutor,
   input: CustomerEnquiryCreate,
 ): Promise<typeof quotationRequests.$inferSelect> {
-  if (input.idempotencyKey) {
-    const [existing] = await db
-      .select()
-      .from(quotationRequests)
-      .where(eq(quotationRequests.idempotencyKey, input.idempotencyKey))
-      .limit(1);
+  const execute = async (tx: DbExecutor) => {
+    const cleanIdempotencyKey = input.idempotencyKey?.trim() || null;
+    if (cleanIdempotencyKey) {
+      const [existing] = await tx
+        .select()
+        .from(quotationRequests)
+        .where(eq(quotationRequests.idempotencyKey, cleanIdempotencyKey))
+        .limit(1);
 
-    if (existing) {
-      return existing;
+      if (existing) {
+        return existing;
+      }
     }
+
+    const productIds = [...new Set(input.items.map((i) => i.productId))];
+    const productRows = await tx
+      .select()
+      .from(products)
+      .where(and(inArray(products.id, productIds), eq(products.status, 'published')));
+
+    const productMap = new Map(productRows.map((p) => [p.id, p]));
+
+    const variantIds = input.items.map((i) => i.variantId).filter(Boolean) as string[];
+    const variantRows =
+      variantIds.length > 0
+        ? await tx.select().from(productVariants).where(inArray(productVariants.id, variantIds))
+        : [];
+    const variantMap = new Map(variantRows.map((v) => [v.id, v]));
+
+    const calculatedLines = calculateQuotationLines(input.items, productMap, variantMap);
+
+    const subtotalPaise = calculatedLines.reduce((acc, l) => acc + l.lineTotalPaise, 0);
+    const discountTotalPaise = calculatedLines.reduce(
+      (acc, l) => acc + l.discountAmountPaise * l.quantity,
+      0,
+    );
+    // Authoritative financial rule: discountTotalPaise is informational only, NEVER deducted again
+    const grandTotalPaise = subtotalPaise;
+
+    const [created] = await tx
+      .insert(quotationRequests)
+      .values({
+        referenceNumber: generateReferenceNumber(),
+        customerName: input.customerName.trim(),
+        customerEmail: input.customerEmail?.trim() || null,
+        customerPhone: input.customerPhone?.trim() || null,
+        customerNotes: input.customerNotes?.trim() || null,
+        status: 'submitted',
+        idempotencyKey: cleanIdempotencyKey,
+        subtotalPaise,
+        discountTotalPaise,
+        grandTotalPaise,
+      })
+      .onConflictDoNothing()
+      .returning();
+
+    if (!created) {
+      if (cleanIdempotencyKey) {
+        const [existing] = await tx
+          .select()
+          .from(quotationRequests)
+          .where(eq(quotationRequests.idempotencyKey, cleanIdempotencyKey))
+          .limit(1);
+
+        if (existing) return existing;
+      }
+      throw new Error('Concurrent quotation submission failed to resolve existing record');
+    }
+
+    await tx.insert(quotationItems).values(
+      calculatedLines.map((line) => ({
+        ...line,
+        quotationId: created.id,
+      })),
+    );
+
+    return created;
+  };
+
+  if ('transaction' in db && typeof db.transaction === 'function') {
+    return await db.transaction((tx) => execute(tx as DbExecutor));
   }
 
-  const productIds = [...new Set(input.items.map((i) => i.productId))];
-  const productRows = await db
-    .select()
-    .from(products)
-    .where(and(inArray(products.id, productIds), eq(products.status, 'published')));
-
-  const productMap = new Map(productRows.map((p) => [p.id, p]));
-
-  const variantIds = input.items.map((i) => i.variantId).filter(Boolean) as string[];
-  const variantRows =
-    variantIds.length > 0
-      ? await db.select().from(productVariants).where(inArray(productVariants.id, variantIds))
-      : [];
-  const variantMap = new Map(variantRows.map((v) => [v.id, v]));
-
-  const calculatedLines = calculateQuotationLines(input.items, productMap, variantMap);
-
-  const subtotalPaise = calculatedLines.reduce((acc, line) => acc + line.lineTotalPaise, 0);
-  const discountTotalPaise = calculatedLines.reduce(
-    (acc, line) => acc + line.discountAmountPaise * line.quantity,
-    0,
-  );
-  // Authoritative financial rule: discountTotalPaise is informational only, NEVER deducted again
-  const grandTotalPaise = subtotalPaise;
-
-  const [created] = await db
-    .insert(quotationRequests)
-    .values({
-      referenceNumber: generateReferenceNumber(),
-      customerName: input.customerName.trim(),
-      customerEmail: input.customerEmail?.trim() || null,
-      customerPhone: input.customerPhone?.trim() || null,
-      customerNotes: input.customerNotes?.trim() || null,
-      status: 'submitted',
-      idempotencyKey: input.idempotencyKey?.trim() || null,
-      subtotalPaise,
-      discountTotalPaise,
-      grandTotalPaise,
-    })
-    .returning();
-
-  await db.insert(quotationItems).values(
-    calculatedLines.map((line) => ({
-      ...line,
-      quotationId: created.id,
-    })),
-  );
-
-  return created;
+  return await execute(db);
 }
 
 export async function findQuotationById(
@@ -90,7 +113,6 @@ export async function findQuotationById(
     .from(quotationRequests)
     .where(eq(quotationRequests.id, id))
     .limit(1);
-
   if (!quotation) return null;
 
   const itemRows = await db
@@ -179,15 +201,10 @@ export async function listQuotations(
   ]);
 
   const total = totalResult[0]?.count ?? 0;
-  if (requestRows.length === 0) {
-    return { items: [], total };
-  }
+  if (requestRows.length === 0) return { items: [], total };
 
   const items = await Promise.all(requestRows.map((r) => findQuotationById(db, r.id)));
-  return {
-    items: items.filter(Boolean) as AdminQuotationDetail[],
-    total,
-  };
+  return { items: items.filter(Boolean) as AdminQuotationDetail[], total };
 }
 
 export async function updateQuotationStatus(
@@ -195,14 +212,14 @@ export async function updateQuotationStatus(
   id: string,
   status: QuotationStatus,
 ): Promise<AdminQuotationDetail | null> {
-  const current = await db
+  const [current] = await db
     .select()
     .from(quotationRequests)
     .where(eq(quotationRequests.id, id))
     .limit(1);
-  if (!current.length || !current[0]) return null;
+  if (!current) return null;
 
-  let snapshot = current[0].companySnapshot;
+  let snapshot = current.companySnapshot;
   if (status === 'issued' && !snapshot) {
     try {
       snapshot = (await getCompanyProfile(db as never)) as unknown as Record<string, unknown>;
@@ -213,11 +230,7 @@ export async function updateQuotationStatus(
 
   const [updated] = await db
     .update(quotationRequests)
-    .set({
-      status,
-      companySnapshot: snapshot,
-      updatedAt: new Date(),
-    })
+    .set({ status, companySnapshot: snapshot, updatedAt: new Date() })
     .where(eq(quotationRequests.id, id))
     .returning();
 
