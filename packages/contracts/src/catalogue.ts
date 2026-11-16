@@ -150,3 +150,39 @@ export type ProductImageInput = z.infer<typeof ProductImageInputSchema>;
 export type ProductRelationshipType = z.infer<typeof ProductRelationshipTypeSchema>;
 export type AdminProductCreate = z.infer<typeof AdminProductCreateSchema>;
 export type PublicProductDto = z.infer<typeof PublicProductDtoSchema>;
+
+export const PublicProductListResponseSchema = z
+  .object({
+    items: z.array(PublicProductDtoSchema),
+    total: z.number().int().nonnegative(),
+  })
+  .strict();
+
+export const PublicProductQuerySchema = z
+  .object({
+    limit: z.coerce.number().int().min(1).max(100).default(50),
+    offset: z.coerce.number().int().min(0).default(0),
+    q: z.string().trim().max(100).optional(),
+    brandId: z.string().uuid().optional(),
+    categoryId: z.string().uuid().optional(),
+    brandSlug: SlugSchema.optional(),
+    categorySlug: SlugSchema.optional(),
+  })
+  .strict();
+
+export const PublicRecommendationItemSchema = z
+  .object({
+    relationshipType: ProductRelationshipTypeSchema,
+    product: PublicProductDtoSchema,
+    notes: z.string().nullable().optional(),
+  })
+  .strict();
+
+export const PublicRecommendationListResponseSchema = z.array(PublicRecommendationItemSchema);
+
+export type PublicProductListResponse = z.infer<typeof PublicProductListResponseSchema>;
+export type PublicProductQuery = z.infer<typeof PublicProductQuerySchema>;
+export type PublicRecommendationItem = z.infer<typeof PublicRecommendationItemSchema>;
+export type PublicRecommendationListResponse = z.infer<
+  typeof PublicRecommendationListResponseSchema
+>;

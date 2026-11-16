@@ -11,3 +11,5 @@ export * from './catalogue-products.js';
 export * from './catalogue-variants.js';
 export * from './catalogue-images.js';
 export * from './catalogue-relationships.js';
+export * from './public-catalogue.js';
+export * from './public-catalogue-hydration.js';

@@ -24,6 +24,22 @@ export function formatCategory(c: NonNullable<Awaited<ReturnType<typeof findCate
   };
 }
 
+export function formatBrand(b: {
+  id: string;
+  name: string;
+  slug: string;
+  createdAt: Date;
+  updatedAt: Date;
+}) {
+  return {
+    id: b.id,
+    name: b.name,
+    slug: b.slug,
+    createdAt: b.createdAt.toISOString(),
+    updatedAt: b.updatedAt.toISOString(),
+  };
+}
+
 export function toVariantDto(
   v: NonNullable<Awaited<ReturnType<typeof findVariantById>>>,
 ): VariantResponse {
