@@ -22,6 +22,7 @@ import type { ServerConfig } from '@palnadu/server-config';
 
 import {
   SESSION_COOKIE_NAME,
+  createCsrfProtection,
   errorResponse,
   requireAdminAuth,
   requireAdminPermission,
@@ -30,6 +31,7 @@ import {
 
 export {
   SESSION_COOKIE_NAME,
+  createCsrfProtection,
   errorResponse,
   requireAdminAuth,
   requireAdminPermission,
@@ -52,7 +54,7 @@ export const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (
   const app = rawApp.withTypeProvider<ZodTypeProvider>();
 
   // CSRF / Origin protection hook for state-changing endpoints
-  app.addHook('onRequest', validateCsrfProtection);
+  app.addHook('onRequest', createCsrfProtection(config.allowedOrigins));
 
   app.post(
     '/api/v1/admin/auth/login',

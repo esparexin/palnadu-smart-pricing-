@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import Fastify, { LogController } from 'fastify';
 import swagger from '@fastify/swagger';
+import cors from '@fastify/cors';
 import {
   jsonSchemaTransform,
   serializerCompiler,
@@ -15,10 +16,10 @@ import {
 import cookie from '@fastify/cookie';
 import rateLimit from '@fastify/rate-limit';
 import type { ServerConfig } from '@palnadu/server-config';
-
-import type { DatabaseClient, StoragePort } from '@palnadu/persistence';
+import { createStorageAdapter, type DatabaseClient, type StoragePort } from '@palnadu/persistence';
 import {
   authPlugin,
+  createCsrfProtection,
   requireAdminAuth,
   requireAdminPermission,
   validateCsrfProtection,
@@ -40,11 +41,12 @@ export interface ApiDependencies {
 }
 
 function getStatusCode(error: unknown): number | undefined {
-  if (typeof error !== 'object' || error === null || !('statusCode' in error)) {
-    return undefined;
-  }
-
-  return typeof error.statusCode === 'number' ? error.statusCode : undefined;
+  return typeof error === 'object' &&
+    error !== null &&
+    'statusCode' in error &&
+    typeof error.statusCode === 'number'
+    ? error.statusCode
+    : undefined;
 }
 
 function isValidationError(error: unknown): boolean {
@@ -57,35 +59,23 @@ function isValidationError(error: unknown): boolean {
 }
 
 function getErrorCode(error: unknown): string | undefined {
-  if (typeof error !== 'object' || error === null || !('code' in error)) {
-    return undefined;
-  }
-
-  return typeof error.code === 'string' ? error.code : undefined;
-}
-
-function getErrorName(error: unknown): string {
-  return error instanceof Error ? error.name : 'UnknownError';
+  return typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof error.code === 'string'
+    ? error.code
+    : undefined;
 }
 
 function errorResponse(code: string, message: string, requestId: string) {
-  return {
-    error: {
-      code,
-      message,
-      requestId,
-    },
-  };
+  return { error: { code, message, requestId } };
 }
 
 function getRequestId(request: { headers: Record<string, string | string[] | undefined> }): string {
   const suppliedId = request.headers['x-request-id'];
-
-  if (typeof suppliedId === 'string' && /^[A-Za-z0-9._:-]{1,128}$/.test(suppliedId)) {
-    return suppliedId;
-  }
-
-  return randomUUID();
+  return typeof suppliedId === 'string' && /^[A-Za-z0-9._:-]{1,128}$/.test(suppliedId)
+    ? suppliedId
+    : randomUUID();
 }
 
 export const LOGGER_REDACT_PATHS = [
@@ -102,13 +92,17 @@ export const LOGGER_REDACT_PATHS = [
 ] as const;
 
 export async function buildServer({ config, database, storage }: ApiDependencies) {
+  const effectiveStorage =
+    storage ??
+    createStorageAdapter({
+      type: config.storageDriver,
+      cloudinary: config.cloudinary,
+    });
+
   const app = Fastify({
     logger: {
       level: config.logLevel,
-      redact: {
-        paths: [...LOGGER_REDACT_PATHS],
-        censor: '[REDACTED]',
-      },
+      redact: { paths: [...LOGGER_REDACT_PATHS], censor: '[REDACTED]' },
     },
     logController: new LogController({
       disableRequestLogging: true,
@@ -122,25 +116,34 @@ export async function buildServer({ config, database, storage }: ApiDependencies
   app.setSerializerCompiler(serializerCompiler);
   app.addHook('onClose', () => database.close());
 
-  await app.register(swagger, {
-    openapi: {
-      info: {
-        title: 'Palnadu.dev Smart Pricing API',
-        version: '1.0.0',
+  if (config.allowedOrigins && config.allowedOrigins.length > 0) {
+    const originSet = new Set(
+      config.allowedOrigins.map((o) => o.replace(/:(80|443)$/, '').toLowerCase()),
+    );
+    await app.register(cors, {
+      origin: (origin, cb) => {
+        if (!origin) return cb(null, true);
+        try {
+          const normalized = new URL(origin).origin.replace(/:(80|443)$/, '').toLowerCase();
+          if (originSet.has(normalized)) return cb(null, true);
+        } catch {
+          /* reject */
+        }
+        return cb(null, false);
       },
-    },
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    });
+  }
+
+  await app.register(swagger, {
+    openapi: { info: { title: 'Palnadu.dev Smart Pricing API', version: '1.0.0' } },
     transform: jsonSchemaTransform,
   });
 
-  await app.register(cookie, {
-    secret: config.sessionSecret,
-    hook: 'onRequest',
-  });
-
-  await app.register(rateLimit, {
-    global: false,
-    hook: 'preHandler',
-  });
+  await app.register(cookie, { secret: config.sessionSecret, hook: 'onRequest' });
+  await app.register(rateLimit, { global: false, hook: 'preHandler' });
 
   app.setErrorHandler((error: unknown, request, reply) => {
     const validationError = isValidationError(error);
@@ -152,22 +155,13 @@ export async function buildServer({ config, database, storage }: ApiDependencies
         : 500;
 
     if (statusCode >= 500) {
-      request.log.error(
-        { errorCode: getErrorCode(error), errorName: getErrorName(error) },
-        'Request failed',
-      );
+      request.log.error({ errorCode: getErrorCode(error) }, 'Request failed');
     }
 
     if (statusCode === 429 || getErrorCode(error) === 'FST_ERR_RATE_LIMIT_EXCEEDED') {
       return reply
         .status(429)
-        .send(
-          errorResponse(
-            'RATE_LIMIT_EXCEEDED',
-            'Too many requests. Please try again later.',
-            request.id,
-          ),
-        );
+        .send(errorResponse('RATE_LIMIT_EXCEEDED', 'Too many requests.', request.id));
     }
 
     const code = validationError
@@ -183,7 +177,6 @@ export async function buildServer({ config, database, storage }: ApiDependencies
         : statusCode < 500
           ? 'Request could not be processed'
           : 'An internal error occurred';
-
     return reply.status(statusCode).send(errorResponse(code, message, request.id));
   });
 
@@ -191,37 +184,19 @@ export async function buildServer({ config, database, storage }: ApiDependencies
     reply.status(404).send(errorResponse('NOT_FOUND', 'Route not found', request.id)),
   );
 
-  app.get(
-    '/api/v1/health',
-    {
-      schema: {
-        response: {
-          200: HealthResponseSchema,
-        },
-      },
-    },
-    async () => ({ status: 'ok' as const }),
-  );
+  app.get('/api/v1/health', { schema: { response: { 200: HealthResponseSchema } } }, async () => ({
+    status: 'ok' as const,
+  }));
 
   app.get(
     '/api/v1/ready',
-    {
-      schema: {
-        response: {
-          200: ReadinessResponseSchema,
-          503: ApiErrorResponseSchema,
-        },
-      },
-    },
+    { schema: { response: { 200: ReadinessResponseSchema, 503: ApiErrorResponseSchema } } },
     async (request, reply) => {
       try {
         await database.ping();
         return { status: 'ready' as const };
       } catch (error) {
-        request.log.error(
-          { errorCode: getErrorCode(error), errorName: getErrorName(error) },
-          'Database readiness check failed',
-        );
+        request.log.error({ errorCode: getErrorCode(error) }, 'Database readiness check failed');
         return reply
           .status(503)
           .send(errorResponse('SERVICE_UNAVAILABLE', 'Service is not ready', request.id));
@@ -235,7 +210,7 @@ export async function buildServer({ config, database, storage }: ApiDependencies
   await app.register(cataloguePlugin, { config, database });
   await app.register(quotationsPlugin, { config, database });
   await app.register(settingsPlugin, { config, database });
-  await app.register(mediaPlugin, { config, database, storage });
+  await app.register(mediaPlugin, { config, database, storage: effectiveStorage });
   await app.register(importExportPlugin, { config, database });
   await app.register(inventoryPlugin, { config, database });
   await app.register(whatsappPlugin, { config, database });
@@ -244,4 +219,10 @@ export async function buildServer({ config, database, storage }: ApiDependencies
   return app;
 }
 
-export { requireAdminAuth, requireAdminPermission, validateCsrfProtection, SESSION_COOKIE_NAME };
+export {
+  requireAdminAuth,
+  requireAdminPermission,
+  validateCsrfProtection,
+  createCsrfProtection,
+  SESSION_COOKIE_NAME,
+};

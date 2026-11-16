@@ -423,4 +423,127 @@ describe('Admin Authentication API (unit)', () => {
     expect(body.error.code).toBe('VALIDATION_ERROR');
     expect(body.error.message).toBe('Request could not be processed');
   });
+
+  it('permits cross-origin mutations when Origin matches ALLOWED_ORIGINS', async () => {
+    const customConfig = parseServerConfig({
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/catalog',
+      LOG_LEVEL: 'silent',
+      NODE_ENV: 'test',
+      ALLOWED_ORIGINS: 'https://admin.staging.vercel.app',
+    });
+    const database = createMockDatabase();
+    const server = await buildServer({ config: customConfig, database });
+    servers.push(server);
+
+    const response = await server.inject({
+      method: 'POST',
+      url: '/api/v1/admin/auth/logout',
+      headers: {
+        host: 'api.staging.onrender.com',
+        origin: 'https://admin.staging.vercel.app',
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ success: true });
+  });
+
+  it('rejects cross-origin mutations when Origin does NOT match ALLOWED_ORIGINS', async () => {
+    const customConfig = parseServerConfig({
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/catalog',
+      LOG_LEVEL: 'silent',
+      NODE_ENV: 'test',
+      ALLOWED_ORIGINS: 'https://admin.staging.vercel.app',
+    });
+    const database = createMockDatabase();
+    const server = await buildServer({ config: customConfig, database });
+    servers.push(server);
+
+    const response = await server.inject({
+      method: 'POST',
+      url: '/api/v1/admin/auth/logout',
+      headers: {
+        host: 'api.staging.onrender.com',
+        origin: 'https://evil-untrusted-site.com',
+      },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json().error.code).toBe('CSRF_ERROR');
+  });
+
+  it('rejects state-changing mutations with session cookie when both Origin and Referer are missing', async () => {
+    const database = createMockDatabase();
+    const server = await buildServer({ config, database });
+    servers.push(server);
+
+    const signedToken = server.signCookie('valid-test-session-token');
+
+    const response = await server.inject({
+      method: 'POST',
+      url: '/api/v1/admin/auth/logout',
+      headers: {
+        host: 'localhost:3001',
+      },
+      cookies: {
+        [SESSION_COOKIE_NAME]: signedToken,
+      },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json().error.code).toBe('CSRF_ERROR');
+    expect(response.json().error.message).toContain('requires Origin or Referer header');
+  });
+
+  it('rejects spoofed X-Forwarded-Host when Origin is not in ALLOWED_ORIGINS', async () => {
+    const customConfig = parseServerConfig({
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/catalog',
+      LOG_LEVEL: 'silent',
+      NODE_ENV: 'test',
+      ALLOWED_ORIGINS: 'https://admin.staging.vercel.app',
+    });
+    const database = createMockDatabase();
+    const server = await buildServer({ config: customConfig, database });
+    servers.push(server);
+
+    const response = await server.inject({
+      method: 'POST',
+      url: '/api/v1/admin/auth/logout',
+      headers: {
+        host: 'api.staging.onrender.com',
+        'x-forwarded-host': 'admin.staging.vercel.app',
+        origin: 'https://attacker.com',
+      },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json().error.code).toBe('CSRF_ERROR');
+  });
+
+  it('handles CORS preflight OPTIONS requests from allowed origins', async () => {
+    const customConfig = parseServerConfig({
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/catalog',
+      LOG_LEVEL: 'silent',
+      NODE_ENV: 'test',
+      ALLOWED_ORIGINS: 'https://admin.staging.vercel.app',
+    });
+    const database = createMockDatabase();
+    const server = await buildServer({ config: customConfig, database });
+    servers.push(server);
+
+    const response = await server.inject({
+      method: 'OPTIONS',
+      url: '/api/v1/admin/auth/login',
+      headers: {
+        origin: 'https://admin.staging.vercel.app',
+        'access-control-request-method': 'POST',
+      },
+    });
+
+    expect(response.statusCode).toBe(204);
+    expect(response.headers['access-control-allow-origin']).toBe(
+      'https://admin.staging.vercel.app',
+    );
+    expect(response.headers['access-control-allow-credentials']).toBe('true');
+  });
 });
