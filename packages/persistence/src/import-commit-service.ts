@@ -1,0 +1,180 @@
+import { eq } from 'drizzle-orm';
+import type { DbExecutor } from './client.js';
+import {
+  getImportBatchById,
+  getImportRowsByBatchId,
+  updateImportBatchStatus,
+} from './catalogue-import-export.js';
+import { createBrand, findBrandByNormalizedNameOrSlug } from './catalogue-brands.js';
+import { createCategory, findCategoryByNormalizedNameOrSlug } from './catalogue-categories.js';
+import { createProduct } from './catalogue-products.js';
+import { importRows, products, productVariants } from './schema.js';
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+async function resolveBrand(db: DbExecutor, name?: string): Promise<string | null> {
+  if (!name) return null;
+  const existing = await findBrandByNormalizedNameOrSlug(db, name);
+  if (existing) return existing.id;
+  const created = await createBrand(db, {
+    name,
+    slug: slugify(name) || 'brand-' + Date.now(),
+  });
+  return created.id;
+}
+
+async function resolveCategory(db: DbExecutor, name?: string): Promise<string | null> {
+  if (!name) return null;
+  const existing = await findCategoryByNormalizedNameOrSlug(db, name);
+  if (existing) return existing.id;
+  const created = await createCategory(db, {
+    name,
+    slug: slugify(name) || 'category-' + Date.now(),
+  });
+  return created.id;
+}
+
+interface NormalizedRowData {
+  sku: string;
+  name: string;
+  slug?: string;
+  brandName?: string;
+  categoryName?: string;
+  description?: string;
+  status?: 'draft' | 'published' | 'archived';
+  mrpPaise?: number;
+  sellingPricePaise?: number;
+}
+
+async function updateExistingProductRow(
+  db: DbExecutor,
+  productId: string,
+  norm: NormalizedRowData,
+  brandId: string | null,
+): Promise<string> {
+  await db
+    .update(products)
+    .set({
+      name: norm.name,
+      description: norm.description ?? null,
+      status: norm.status ?? 'draft',
+      brandId: brandId ?? undefined,
+      updatedAt: new Date(),
+    })
+    .where(eq(products.id, productId));
+
+  await db
+    .update(productVariants)
+    .set({
+      mrpPaise: norm.mrpPaise ?? null,
+      offerPricePaise: norm.sellingPricePaise ?? null,
+    })
+    .where(eq(productVariants.productId, productId));
+  return productId;
+}
+
+async function createNewProductRow(
+  db: DbExecutor,
+  norm: NormalizedRowData,
+  brandId: string | null,
+  categoryId: string | null,
+): Promise<string> {
+  const generatedSlug =
+    norm.slug || slugify(norm.name) || `product-${norm.sku.toLowerCase()}-${Date.now()}`;
+
+  const product = await createProduct(db, {
+    name: norm.name,
+    slug: generatedSlug,
+    brandId: brandId ?? null,
+    categoryIds: categoryId ? [categoryId] : [],
+    description: norm.description ?? null,
+    status: norm.status ?? 'draft',
+    variants: [
+      {
+        sku: norm.sku,
+        mrpPaise: norm.mrpPaise ?? null,
+        offerPricePaise: norm.sellingPricePaise ?? null,
+      },
+    ],
+  });
+  return product.id;
+}
+
+async function applyImportRow(
+  db: DbExecutor,
+  mode: string,
+  productId: string | null,
+  norm: NormalizedRowData,
+  brandId: string | null,
+  categoryId: string | null,
+): Promise<string | null> {
+  if (mode === 'update_existing' && productId) {
+    return updateExistingProductRow(db, productId, norm, brandId);
+  }
+  return createNewProductRow(db, norm, brandId, categoryId);
+}
+
+export async function commitImportBatch(db: DbExecutor, batchId: string) {
+  const batch = await getImportBatchById(db, batchId);
+  if (!batch) throw new Error(`Import batch '${batchId}' not found`);
+  if (batch.status === 'completed') {
+    return {
+      batchId: batch.id,
+      appliedRows: batch.appliedRows,
+      skippedRows: batch.totalRows - batch.appliedRows,
+      status: batch.status,
+    };
+  }
+
+  const rows = await getImportRowsByBatchId(db, batchId);
+  const validRows = rows.filter((r: { status: string }) => r.status === 'valid');
+  let appliedCount = 0;
+
+  for (const row of validRows) {
+    const rawData = row.rawData as Record<string, unknown>;
+    const norm = (rawData._normalized ?? rawData) as NormalizedRowData;
+
+    const brandId = await resolveBrand(db, norm.brandName);
+    const categoryId = await resolveCategory(db, norm.categoryName);
+
+    const resultingId = await applyImportRow(
+      db,
+      batch.mode,
+      row.productId,
+      norm,
+      brandId,
+      categoryId,
+    );
+
+    await db
+      .update(importRows)
+      .set({
+        status: 'applied',
+        productId: resultingId,
+      })
+      .where(eq(importRows.id, row.id));
+
+    appliedCount++;
+  }
+
+  const finalStatus = appliedCount > 0 || batch.totalRows === 0 ? 'completed' : 'failed';
+
+  await updateImportBatchStatus(db, batchId, {
+    status: finalStatus,
+    appliedRows: appliedCount,
+  });
+
+  return {
+    batchId: batch.id,
+    appliedRows: appliedCount,
+    skippedRows: batch.totalRows - appliedCount,
+    status: finalStatus,
+  };
+}
