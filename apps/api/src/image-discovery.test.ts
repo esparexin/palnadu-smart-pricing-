@@ -99,16 +99,14 @@ describe('Product Image Discovery API', () => {
         ({
           from: () => ({
             where: () => ({
-              limit: vi
-                .fn()
-                .mockResolvedValue([
-                  {
-                    id: productId,
-                    name: 'CP Plus Camera',
-                    model: 'CP-UNC-TA41ZL4-MDS',
-                    brandId: null,
-                  },
-                ]),
+              limit: vi.fn().mockResolvedValue([
+                {
+                  id: productId,
+                  name: 'CP Plus Camera',
+                  model: 'CP-UNC-TA41ZL4-MDS',
+                  brandId: null,
+                },
+              ]),
             }),
           }),
         }) as never,
