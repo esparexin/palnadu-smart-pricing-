@@ -12,7 +12,15 @@ const serverConfigSchema = z.object({
     .refine((value) => ['postgres:', 'postgresql:'].includes(new URL(value).protocol), {
       message: 'Must use a PostgreSQL connection URL',
     }),
+  DATABASE_DIRECT_URL: z
+    .string()
+    .url()
+    .refine((value) => ['postgres:', 'postgresql:'].includes(new URL(value).protocol), {
+      message: 'Must use a PostgreSQL connection URL',
+    })
+    .optional(),
   DB_POOL_MAX: z.coerce.number().int().min(1).max(20).default(5),
+  DB_SSL: z.enum(['require', 'prefer', 'disable', 'allow']).optional(),
   HOST: z.string().trim().min(1).default('127.0.0.1'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -23,7 +31,9 @@ const serverConfigSchema = z.object({
 
 export interface ServerConfig {
   databaseUrl: string;
+  databaseDirectUrl?: string;
   databasePoolMax: number;
+  dbSsl?: 'require' | 'prefer' | 'disable' | 'allow';
   host: string;
   logLevel: 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace' | 'silent';
   nodeEnv: 'development' | 'test' | 'production';
@@ -46,7 +56,9 @@ export function parseServerConfig(environment: Record<string, string | undefined
 
   const {
     DATABASE_URL,
+    DATABASE_DIRECT_URL,
     DB_POOL_MAX,
+    DB_SSL,
     HOST,
     LOG_LEVEL,
     NODE_ENV,
@@ -102,7 +114,9 @@ export function parseServerConfig(environment: Record<string, string | undefined
 
   return {
     databaseUrl: DATABASE_URL,
+    databaseDirectUrl: DATABASE_DIRECT_URL,
     databasePoolMax: DB_POOL_MAX,
+    dbSsl: DB_SSL,
     host: HOST,
     logLevel: LOG_LEVEL,
     nodeEnv: NODE_ENV,
