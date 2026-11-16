@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { DbExecutor } from './client.js';
 import { decryptSecret, encryptSecret, verifyWebhookSignature } from './whatsapp-crypto.js';
 import { handleWhatsAppInboundMessage } from './whatsapp-inbound.js';
+import { sendMetaWhatsAppMessage } from './whatsapp-cloud.js';
 import { createHmac } from 'node:crypto';
 
 describe('WhatsApp Crypto & Security', () => {
@@ -93,5 +94,143 @@ describe('WhatsApp Crypto & Security', () => {
 
     expect(res.status).toBe('opt_out');
     expect(res.wamid).toBe('wamid.HBgL123456');
+  });
+
+  it('fails closed in production if encryption key is not set', () => {
+    const origEnv = process.env.NODE_ENV;
+    const origSecret = process.env.SESSION_SECRET;
+    const origKey = process.env.ENCRYPTION_KEY;
+    try {
+      process.env.NODE_ENV = 'production';
+      delete process.env.SESSION_SECRET;
+      delete process.env.ENCRYPTION_KEY;
+      expect(() => encryptSecret('test')).toThrow(/WhatsApp encryption key is not configured/);
+    } finally {
+      process.env.NODE_ENV = origEnv;
+      if (origSecret) process.env.SESSION_SECRET = origSecret;
+      if (origKey) process.env.ENCRYPTION_KEY = origKey;
+    }
+  });
+
+  it('sends real WhatsApp message via Meta Graph API', async () => {
+    const mockDb = {
+      select() {
+        return {
+          from(table: unknown) {
+            return {
+              where() {
+                const name = (table as { [key: symbol]: string })[Symbol.for('drizzle:Name')];
+                if (name === 'whatsapp_opt_outs') return [];
+                return [
+                  {
+                    id: 'default',
+                    enabled: true,
+                    phoneNumberId: 'phone_123',
+                    wabaId: 'waba_456',
+                    apiVersion: 'v20.0',
+                    accessTokenEncrypted: encryptSecret('EAAB_test_token'),
+                    appSecretEncrypted: encryptSecret('secret_123'),
+                    verifyToken: 'token_123',
+                  },
+                ];
+              },
+            };
+          },
+        };
+      },
+      insert() {
+        return {
+          values(val: Record<string, unknown>) {
+            return {
+              returning() {
+                return Promise.resolve([{ ...val, id: 'msg-out-1' }]);
+              },
+            };
+          },
+        };
+      },
+    };
+
+    let capturedUrl = '';
+    let capturedAuth = '';
+    const fakeFetch: typeof fetch = async (url, init) => {
+      capturedUrl = String(url);
+      capturedAuth = String((init?.headers as Record<string, string>)?.Authorization);
+      return {
+        ok: true,
+        json: async () => ({ messages: [{ id: 'wamid.HBgLMetaTest123' }] }),
+      } as unknown as Response;
+    };
+
+    const res = await sendMetaWhatsAppMessage(mockDb as unknown as DbExecutor, {
+      to: '+919876543210',
+      type: 'text',
+      text: 'Quotation estimate details',
+      fetchFn: fakeFetch,
+    });
+
+    expect(res.success).toBe(true);
+    expect(res.wamid).toBe('wamid.HBgLMetaTest123');
+    expect(res.status).toBe('sent');
+    expect(capturedUrl).toBe('https://graph.facebook.com/v20.0/phone_123/messages');
+    expect(capturedAuth).toBe('Bearer EAAB_test_token');
+  });
+
+  it('records failed status and error message on HTTP failure', async () => {
+    const mockDb = {
+      select() {
+        return {
+          from(table: unknown) {
+            return {
+              where: () => {
+                const name = (table as { [key: symbol]: string })[Symbol.for('drizzle:Name')];
+                if (name === 'whatsapp_opt_outs') return [];
+                return [
+                  {
+                    id: 'default',
+                    enabled: true,
+                    phoneNumberId: 'phone_123',
+                    wabaId: 'waba_456',
+                    apiVersion: 'v20.0',
+                    accessTokenEncrypted: encryptSecret('EAAB_test_token'),
+                  },
+                ];
+              },
+            };
+          },
+        };
+      },
+      insert() {
+        return {
+          values(val: Record<string, unknown>) {
+            return {
+              returning() {
+                return Promise.resolve([{ ...val, id: 'msg-out-fail' }]);
+              },
+            };
+          },
+        };
+      },
+    };
+
+    const failingFetch: typeof fetch = async () => {
+      return {
+        ok: false,
+        status: 401,
+        json: async () => ({ error: { message: 'Invalid OAuth access token' } }),
+      } as unknown as Response;
+    };
+
+    const res = await sendMetaWhatsAppMessage(mockDb as unknown as DbExecutor, {
+      to: '+919876543210',
+      type: 'text',
+      text: 'Quotation estimate details',
+      fetchFn: failingFetch,
+    });
+
+    expect(res.success).toBe(false);
+    expect(res.status).toBe('failed');
+    expect(res.error).toBe('Invalid OAuth access token');
+    expect(res.wamid).toMatch(/^wamid\.ERR_/);
   });
 });

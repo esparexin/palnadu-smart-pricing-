@@ -35,6 +35,7 @@ export * from './whatsapp.schema.js';
 export * from './whatsapp-crypto.js';
 export * from './whatsapp-service.js';
 export * from './whatsapp-inbound.js';
+export * from './whatsapp-cloud.js';
 export * from './integrations.schema.js';
 export * from './tally-parser.js';
 export * from './integrations-service.js';
