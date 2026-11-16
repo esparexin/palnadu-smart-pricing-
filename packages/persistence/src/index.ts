@@ -13,3 +13,5 @@ export * from './catalogue-images.js';
 export * from './catalogue-relationships.js';
 export * from './public-catalogue.js';
 export * from './public-catalogue-hydration.js';
+export * from './quotations.js';
+export * from './quotation-calculation.js';

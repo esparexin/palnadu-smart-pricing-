@@ -1,2 +1,3 @@
 export * from './catalogue.schema.js';
 export * from './auth.schema.js';
+export * from './quotation.schema.js';
