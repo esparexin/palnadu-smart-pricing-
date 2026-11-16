@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import type { DatabaseClient, StoragePort } from '@palnadu/persistence';
 import type { ServerConfig } from '@palnadu/server-config';
 import { mediaRoutes } from './media.routes.js';
+import { discoveryRoutes } from './discovery.routes.js';
 
 export interface MediaPluginOptions {
   config: ServerConfig;
@@ -14,6 +15,10 @@ export const mediaPlugin: FastifyPluginAsync<MediaPluginOptions> = async (rawApp
   await rawApp.register(mediaRoutes, {
     database,
     storage,
+    prefix: '/api/v1/admin',
+  });
+  await rawApp.register(discoveryRoutes, {
+    database,
     prefix: '/api/v1/admin',
   });
 };

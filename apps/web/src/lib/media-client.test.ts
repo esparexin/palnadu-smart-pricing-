@@ -64,4 +64,44 @@ describe('MediaClient', () => {
     expect(res.id).toBe('img-1');
     expect(res.isPrimary).toBe(true);
   });
+
+  it('triggers candidate image discovery for a product', async () => {
+    const client = new MediaClient(mockExecutor);
+    const productId = 'prod-123';
+    vi.mocked(mockExecutor.request).mockResolvedValueOnce([
+      {
+        id: 'cand-1',
+        productId,
+        sourceUrl: 'https://images.example.com/cam.jpg',
+        matchConfidence: 'exact_model',
+        status: 'pending',
+      },
+    ]);
+
+    const res = await client.discoverImages(productId);
+    expect(mockExecutor.request).toHaveBeenCalledWith(
+      `/api/v1/admin/products/${productId}/images/discover`,
+      { method: 'POST' },
+    );
+    expect(res).toHaveLength(1);
+    expect(res[0]?.matchConfidence).toBe('exact_model');
+  });
+
+  it('approves and rejects image candidates', async () => {
+    const client = new MediaClient(mockExecutor);
+    const productId = 'prod-123';
+    const candidateId = 'cand-1';
+
+    vi.mocked(mockExecutor.request).mockResolvedValueOnce({
+      candidate: { id: candidateId, status: 'approved' },
+      image: { id: 'img-1', isPrimary: true },
+    });
+
+    const approveRes = await client.approveCandidate(productId, candidateId, { isPrimary: true });
+    expect(approveRes.candidate.status).toBe('approved');
+
+    vi.mocked(mockExecutor.request).mockResolvedValueOnce({ success: true });
+    const rejectRes = await client.rejectCandidate(productId, candidateId);
+    expect(rejectRes.success).toBe(true);
+  });
 });
