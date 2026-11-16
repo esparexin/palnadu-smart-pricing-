@@ -4,8 +4,9 @@ import './globals.css';
 import { NotificationProvider } from '../context/notification-context';
 
 export const metadata: Metadata = {
-  title: 'Palnadu Smart Pricing Admin',
-  description: 'Administrative portal for Palnadu Smart Pricing Catalogue and Engine',
+  title: 'Palnadu Smart Pricing | Commercial Products & Quotations',
+  description:
+    'Authoritative commercial equipment catalogue, specifications, and quotation discovery.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
