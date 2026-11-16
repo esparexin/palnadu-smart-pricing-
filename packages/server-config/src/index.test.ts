@@ -147,4 +147,23 @@ describe('parseServerConfig', () => {
       }),
     ).toThrow('PORT');
   });
+
+  it('parses optional DATABASE_DIRECT_URL and DB_SSL', () => {
+    const config = parseServerConfig({
+      DATABASE_URL: 'postgres://user:pass@pooler.prisma.io:6543/db?pgbouncer=true',
+      DATABASE_DIRECT_URL: 'postgres://user:pass@direct.prisma.io:5432/db',
+      DB_SSL: 'require',
+    });
+    expect(config.databaseDirectUrl).toBe('postgres://user:pass@direct.prisma.io:5432/db');
+    expect(config.dbSsl).toBe('require');
+  });
+
+  it('rejects non-PostgreSQL DATABASE_DIRECT_URL', () => {
+    expect(() =>
+      parseServerConfig({
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/catalog',
+        DATABASE_DIRECT_URL: 'mysql://user:pass@localhost:3306/db',
+      }),
+    ).toThrow('DATABASE_DIRECT_URL');
+  });
 });

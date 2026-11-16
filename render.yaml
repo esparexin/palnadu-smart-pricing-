@@ -1,0 +1,52 @@
+services:
+  - type: web
+    name: palnadu-api
+    runtime: node
+    plan: starter
+    region: singapore
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @palnadu/server-config build && pnpm --filter @palnadu/contracts build && pnpm --filter @palnadu/persistence build && pnpm --filter @palnadu/api build
+    startCommand: node apps/api/dist/main.js
+    healthCheckPath: /api/v1/health/live
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 3001
+      - key: LOG_LEVEL
+        value: info
+      - key: DB_POOL_MAX
+        value: 5
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_DIRECT_URL
+        sync: false
+      - key: DB_SSL
+        value: require
+      - key: SESSION_SECRET
+        sync: false
+      - key: SESSION_TTL_HOURS
+        value: 12
+      - key: STORAGE_DRIVER
+        value: local
+
+  - type: web
+    name: palnadu-web
+    runtime: node
+    plan: starter
+    region: singapore
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @palnadu/contracts build && pnpm --filter @palnadu/web build
+    startCommand: pnpm --filter @palnadu/web start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: API_INTERNAL_URL
+        fromService:
+          type: web
+          name: palnadu-api
+          property: host
+      - key: NEXT_PUBLIC_API_URL
+        sync: false

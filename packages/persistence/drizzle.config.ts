@@ -14,7 +14,7 @@ const config = parseServerConfig(process.env);
 
 export default defineConfig({
   dbCredentials: {
-    url: config.databaseUrl,
+    url: config.databaseDirectUrl ?? config.databaseUrl,
   },
   dialect: 'postgresql',
   out: './drizzle',
