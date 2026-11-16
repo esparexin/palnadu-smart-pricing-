@@ -71,7 +71,8 @@ describe('Storage Adapters', () => {
       return {
         end: (buf: Buffer) => {
           callback(null, {
-            secure_url: 'https://res.cloudinary.com/test-cloud/image/upload/smart-pricing/test.webp',
+            secure_url:
+              'https://res.cloudinary.com/test-cloud/image/upload/smart-pricing/test.webp',
             bytes: buf.length,
           });
         },
@@ -121,9 +122,7 @@ describe('Storage Adapters', () => {
       folder: 'smart-pricing',
     });
 
-    const destroySpy = vi
-      .spyOn(cloudinary.uploader, 'destroy')
-      .mockResolvedValue({ result: 'ok' });
+    const destroySpy = vi.spyOn(cloudinary.uploader, 'destroy').mockResolvedValue({ result: 'ok' });
 
     await adapter.delete('products/test.webp');
     expect(destroySpy).toHaveBeenCalledWith('smart-pricing/products/test', {
