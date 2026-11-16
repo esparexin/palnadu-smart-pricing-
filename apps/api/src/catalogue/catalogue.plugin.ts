@@ -5,6 +5,7 @@ import { brandsRoutes } from './brands.routes.js';
 import { categoriesRoutes } from './categories.routes.js';
 import { imagesRoutes } from './images.routes.js';
 import { productsRoutes } from './products.routes.js';
+import { publicCatalogueRoutes } from './public-catalogue.routes.js';
 import { relationshipsRoutes } from './relationships.routes.js';
 import { variantsRoutes } from './variants.routes.js';
 
@@ -26,4 +27,6 @@ export const cataloguePlugin: FastifyPluginAsync<CataloguePluginOptions> = async
   await rawApp.register(variantsRoutes, { ...routeOptions, prefix: '/api/v1/admin' });
   await rawApp.register(imagesRoutes, { ...routeOptions, prefix: '/api/v1/admin' });
   await rawApp.register(relationshipsRoutes, { ...routeOptions, prefix: '/api/v1/admin' });
+  await rawApp.register(publicCatalogueRoutes, { ...routeOptions, prefix: '/api/v1/public' });
+  await rawApp.register(publicCatalogueRoutes, { ...routeOptions, prefix: '/api/v1/catalogue' });
 };

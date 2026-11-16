@@ -5,6 +5,9 @@ import {
   AdminCategoryCreateSchema,
   AdminProductCreateSchema,
   PublicProductDtoSchema,
+  PublicProductListResponseSchema,
+  PublicProductQuerySchema,
+  PublicRecommendationItemSchema,
   SlugSchema,
 } from './catalogue.js';
 
@@ -122,5 +125,47 @@ describe('Catalogue Contracts (packages/contracts)', () => {
         offerPricePaise: 680000,
       }),
     ).toThrow();
+  });
+
+  it('validates public product listing query and response contracts', () => {
+    const query = PublicProductQuerySchema.parse({
+      limit: '20',
+      offset: '0',
+      q: 'camera',
+      brandSlug: 'hikvision',
+      categorySlug: 'ip-cameras',
+    });
+    expect(query.limit).toBe(20);
+    expect(query.offset).toBe(0);
+    expect(query.q).toBe('camera');
+
+    const listResponse = PublicProductListResponseSchema.parse({
+      items: [],
+      total: 0,
+    });
+    expect(listResponse.items).toEqual([]);
+    expect(listResponse.total).toBe(0);
+  });
+
+  it('validates public recommendation item contract without pricing', () => {
+    const item = PublicRecommendationItemSchema.parse({
+      relationshipType: 'complementary',
+      product: {
+        id: randomUUID(),
+        slug: 'junction-box',
+        name: 'Weatherproof Junction Box',
+        model: 'JB-101',
+        description: 'Mounting junction box',
+        unit: 'piece',
+        specifications: {},
+        brand: null,
+        categories: [],
+        variants: [],
+        images: [],
+      },
+      notes: 'Recommended for dome camera installation',
+    });
+    expect(item.relationshipType).toBe('complementary');
+    expect(item.product.name).toBe('Weatherproof Junction Box');
   });
 });
