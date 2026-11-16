@@ -47,6 +47,7 @@ describe('Quotations API & Financial Calculation Engine', () => {
       expect(doc.paths['/api/v1/public/enquiries']?.post).toBeDefined();
       expect(doc.paths['/api/v1/catalogue/enquiries']?.post).toBeDefined();
       expect(doc.paths['/api/v1/admin/quotations']?.get).toBeDefined();
+      expect(doc.paths['/api/v1/admin/quotations/metrics']?.get).toBeDefined();
       expect(doc.paths['/api/v1/admin/quotations/{id}']?.get).toBeDefined();
       expect(doc.paths['/api/v1/admin/quotations/{id}/status']?.patch).toBeDefined();
       expect(doc.paths['/api/v1/admin/quotations/{id}/retry-delivery']?.post).toBeDefined();

@@ -9,11 +9,13 @@ import {
   ApiErrorResponseSchema,
   CustomerEnquiryCreateSchema,
   CustomerEnquiryResponseSchema,
+  QuotationMetricsResponseSchema,
 } from '@palnadu/contracts';
 import {
   createQuotationEnquiry,
   dispatchQuotationWhatsAppEstimate,
   findQuotationById,
+  getQuotationMetrics,
   listQuotations,
   updateQuotationStatus,
   type DatabaseClient,
@@ -116,6 +118,24 @@ export const adminQuotationsRoutes: FastifyPluginAsync<QuotationsRouteOptions> =
     async (request) => {
       const result = await listQuotations(database.db, request.query);
       return result;
+    },
+  );
+
+  // GET /api/v1/admin/quotations/metrics
+  app.get(
+    '/quotations/metrics',
+    {
+      preHandler: adminRead,
+      schema: {
+        response: {
+          200: QuotationMetricsResponseSchema,
+          401: ApiErrorResponseSchema,
+          403: ApiErrorResponseSchema,
+        },
+      },
+    },
+    async () => {
+      return getQuotationMetrics(database.db);
     },
   );
 

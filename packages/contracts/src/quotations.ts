@@ -114,6 +114,24 @@ export const AdminQuotationStatusUpdateSchema = z
   })
   .strict();
 
+export const FrequentlyRequestedProductSchema = z
+  .object({
+    productId: z.string().uuid(),
+    productName: z.string(),
+    distinctRequestCount: z.number().int().nonnegative(),
+    totalRequestedQuantity: z.number().int().nonnegative(),
+  })
+  .strict();
+
+export const QuotationMetricsResponseSchema = z
+  .object({
+    totalRequestsReceived: z.number().int().nonnegative(),
+    totalQuotationsGenerated: z.number().int().nonnegative(),
+    totalQuotationValuePaise: z.number().int().nonnegative(),
+    frequentlyRequestedProducts: z.array(FrequentlyRequestedProductSchema),
+  })
+  .strict();
+
 export type QuotationStatus = z.infer<typeof QuotationStatusSchema>;
 export type CustomerEnquiryItem = z.infer<typeof CustomerEnquiryItemSchema>;
 export type CustomerEnquiryCreate = z.infer<typeof CustomerEnquiryCreateSchema>;
@@ -123,3 +141,5 @@ export type AdminQuotationDetail = z.infer<typeof AdminQuotationDetailSchema>;
 export type AdminQuotationListQuery = z.infer<typeof AdminQuotationListQuerySchema>;
 export type AdminQuotationListResponse = z.infer<typeof AdminQuotationListResponseSchema>;
 export type AdminQuotationStatusUpdate = z.infer<typeof AdminQuotationStatusUpdateSchema>;
+export type FrequentlyRequestedProduct = z.infer<typeof FrequentlyRequestedProductSchema>;
+export type QuotationMetricsResponse = z.infer<typeof QuotationMetricsResponseSchema>;

@@ -60,6 +60,19 @@ export default function AdminQuotationDetailPage() {
     }
   };
 
+  const handleRetryDelivery = async () => {
+    if (!id || actionLoading) return;
+    setActionLoading(true);
+    try {
+      const updated = await apiClient.quotations.retryDelivery(id);
+      setQuotation(updated);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to retry WhatsApp delivery');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (loading) return <LoadingState label="Loading quotation details..." />;
   if (error || !quotation) {
     return (
@@ -125,6 +138,7 @@ export default function AdminQuotationDetailPage() {
             quotation={quotation}
             actionLoading={actionLoading}
             onStatusChange={handleStatusChange}
+            onRetryDelivery={handleRetryDelivery}
           />
           <QuotationOverviewCard quotation={quotation} />
           <QuotationItemsTable items={quotation.items} />
