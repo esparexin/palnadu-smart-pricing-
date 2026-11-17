@@ -25,6 +25,8 @@ export function BasketSubmissionForm({
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerNotes, setCustomerNotes] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,6 +43,13 @@ export function BasketSubmissionForm({
       return;
     }
 
+    if (!termsAccepted) {
+      setValidationError(
+        'Please accept the business Terms and Conditions to submit your quotation request.',
+      );
+      return;
+    }
+
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setValidationError('Please provide a valid email address.');
       return;
@@ -51,11 +60,14 @@ export function BasketSubmissionForm({
       return;
     }
 
+    const consentPrefix = `[Consent: Terms Accepted${marketingOptIn ? '; Marketing Opt-in' : ''}]`;
+    const fullNotes = notes ? `${consentPrefix}\n${notes}` : consentPrefix;
+
     await onSubmit({
       customerName: name,
       customerEmail: email || undefined,
       customerPhone: phone || undefined,
-      customerNotes: notes || undefined,
+      customerNotes: fullNotes,
     });
   };
 
@@ -139,6 +151,40 @@ export function BasketSubmissionForm({
           maxLength={1000}
           className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
+      </div>
+
+      {/* Terms Acceptance & Optional Marketing Opt-In */}
+      <div className="space-y-3 pt-3 border-t border-slate-100 text-xs">
+        <label className="flex items-start gap-2.5 cursor-pointer">
+          <input
+            id="terms-acceptance"
+            type="checkbox"
+            checked={termsAccepted}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
+            required
+            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+          />
+          <span className="text-slate-700 leading-snug">
+            I accept the business{' '}
+            <strong className="font-semibold text-slate-900">Terms and Conditions</strong> for this
+            quotation request. All displayed prices are indicative estimates subject to final
+            commercial confirmation. <span className="text-red-500">*</span>
+          </span>
+        </label>
+
+        <label className="flex items-start gap-2.5 cursor-pointer">
+          <input
+            id="marketing-optin"
+            type="checkbox"
+            checked={marketingOptIn}
+            onChange={(e) => setMarketingOptIn(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+          />
+          <span className="text-slate-600 leading-snug">
+            I opt in to receive commercial updates, product announcements, and promotional
+            communications. (Optional)
+          </span>
+        </label>
       </div>
 
       <div className="pt-2 border-t border-slate-100">

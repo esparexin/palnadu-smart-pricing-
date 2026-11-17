@@ -13,8 +13,8 @@ import {
 } from '@palnadu/contracts';
 import {
   findPublicProductBySlug,
-  listBrands,
-  listCategories,
+  listPublicBrands,
+  listPublicCategories,
   listPublicProducts,
   listPublicRecommendations,
   type DatabaseClient,
@@ -119,10 +119,8 @@ export const publicCatalogueRoutes: FastifyPluginAsync<PublicCatalogueRouteOptio
       },
     },
     async (request) => {
-      const { items } = await listCategories(database.db, {
+      const items = await listPublicCategories(database.db, {
         q: request.query.q,
-        limit: 100,
-        offset: 0,
       });
       return items.map(formatCategory);
     },
@@ -141,10 +139,8 @@ export const publicCatalogueRoutes: FastifyPluginAsync<PublicCatalogueRouteOptio
       },
     },
     async (request) => {
-      const { items } = await listBrands(database.db, {
+      const items = await listPublicBrands(database.db, {
         q: request.query.q,
-        limit: 100,
-        offset: 0,
       });
       return items.map(formatBrand);
     },

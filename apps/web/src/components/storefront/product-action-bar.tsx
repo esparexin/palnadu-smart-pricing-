@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { PublicProductDto } from '@palnadu/contracts';
 import { useBasket } from '../../context/basket-context';
 
@@ -10,6 +11,7 @@ export interface ProductActionBarProps {
 }
 
 export function ProductActionBar({ product }: ProductActionBarProps) {
+  const router = useRouter();
   const { addItem, items } = useBasket();
   const [selectedVariantId, setSelectedVariantId] = useState<string>(product.variants[0]?.id ?? '');
   const [quantity, setQuantity] = useState(1);
@@ -38,6 +40,11 @@ export function ProductActionBar({ product }: ProductActionBarProps) {
     );
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 3000);
+  };
+
+  const handleGetQuote = () => {
+    handleAddToBasket();
+    router.push('/basket');
   };
 
   return (
@@ -108,13 +115,20 @@ export function ProductActionBar({ product }: ProductActionBarProps) {
         <div className="flex flex-col sm:flex-row gap-2.5 pt-2 border-t border-slate-100">
           <button
             type="button"
-            onClick={handleAddToBasket}
+            onClick={handleGetQuote}
             className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Get Quote
+          </button>
+          <button
+            type="button"
+            onClick={handleAddToBasket}
+            className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {justAdded
               ? '✓ Added to Basket'
               : isAlreadyInBasket
-                ? 'Add More to Basket'
+                ? '+ Add More'
                 : 'Add to Quote Basket'}
           </button>
           {isAlreadyInBasket && (
@@ -134,31 +148,30 @@ export function ProductActionBar({ product }: ProductActionBarProps) {
           <p className="text-[11px] text-slate-500 text-center pb-2 italic">
             Indicative estimate • Final terms confirmed during quotation
           </p>
-          {justAdded || isAlreadyInBasket ? (
-            <div className="flex flex-1 gap-2">
-              <button
-                type="button"
-                onClick={handleAddToBasket}
-                className="flex-1 inline-flex min-h-[44px] items-center justify-center rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-sm"
-              >
-                ✓ Added (+1)
-              </button>
-              <Link
-                href="/basket"
-                className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm"
-              >
-                View Basket
-              </Link>
-            </div>
-          ) : (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleGetQuote}
+              className="flex-1 inline-flex min-h-[44px] items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+            >
+              Get Quote
+            </button>
             <button
               type="button"
               onClick={handleAddToBasket}
-              className="w-full inline-flex min-h-[44px] items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm"
+              className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm"
             >
-              Add to Quote Basket
+              {justAdded ? '✓ Added' : '+ Add'}
             </button>
-          )}
+            {isAlreadyInBasket && (
+              <Link
+                href="/basket"
+                className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-emerald-50 border border-emerald-600 px-3 py-2 text-sm font-semibold text-emerald-700 shadow-sm"
+              >
+                Basket
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </>
