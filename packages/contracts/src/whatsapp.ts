@@ -4,6 +4,7 @@ export const WhatsAppMessageDirectionSchema = z.enum(['inbound', 'outbound']);
 export type WhatsAppMessageDirection = z.infer<typeof WhatsAppMessageDirectionSchema>;
 
 export const WhatsAppMessageStatusSchema = z.enum([
+  'pending',
   'sent',
   'delivered',
   'read',

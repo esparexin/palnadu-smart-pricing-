@@ -10,12 +10,14 @@ import { StorefrontFooter } from '../../components/storefront/storefront-footer'
 import { BasketItemRow } from '../../components/storefront/basket-item-row';
 import { BasketSubmissionForm } from '../../components/storefront/basket-submission-form';
 import { BasketSuccessView } from '../../components/storefront/basket-success-view';
+import { PricingDisclosure } from '../../components/storefront/pricing-disclosure';
 
 export default function BasketPage() {
   const { items, itemCount, isMounted, updateQuantity, removeItem, clearBasket } = useBasket();
   const [submittedResult, setSubmittedResult] = useState<CustomerEnquiryResponse | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submissionIdempotencyKey, setSubmissionIdempotencyKey] = useState<string | null>(null);
 
   const handleSubmitEnquiry = async (formData: {
     customerName: string;
@@ -26,7 +28,12 @@ export default function BasketPage() {
     setIsSubmitting(true);
     setSubmitError(null);
 
-    const idempotencyKey = `quote-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const activeIdempotencyKey =
+      submissionIdempotencyKey ||
+      `quote-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    if (!submissionIdempotencyKey) {
+      setSubmissionIdempotencyKey(activeIdempotencyKey);
+    }
 
     try {
       const result = await apiClient.storefront.submitEnquiry({
@@ -34,7 +41,7 @@ export default function BasketPage() {
         customerEmail: formData.customerEmail || null,
         customerPhone: formData.customerPhone || null,
         customerNotes: formData.customerNotes || null,
-        idempotencyKey,
+        idempotencyKey: activeIdempotencyKey,
         items: items.map((i) => ({
           productId: i.productId,
           variantId: i.variantId || null,
@@ -43,6 +50,7 @@ export default function BasketPage() {
       });
 
       setSubmittedResult(result);
+      setSubmissionIdempotencyKey(null);
       clearBasket();
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Failed to submit quotation enquiry');
@@ -69,7 +77,10 @@ export default function BasketPage() {
           <BasketSuccessView
             referenceNumber={submittedResult.referenceNumber}
             createdAt={submittedResult.createdAt}
-            onNewEnquiry={() => setSubmittedResult(null)}
+            onNewEnquiry={() => {
+              setSubmittedResult(null);
+              setSubmissionIdempotencyKey(null);
+            }}
           />
         ) : !isMounted ? (
           <div className="py-12 text-center text-sm text-slate-500">Loading basket...</div>
@@ -127,17 +138,8 @@ export default function BasketPage() {
                 ))}
               </div>
 
-              {/* Price Confidentiality Card */}
-              <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 text-xs text-slate-700">
-                <div className="font-bold uppercase tracking-wider text-blue-900 mb-1">
-                  Price Confidentiality Policy
-                </div>
-                <p className="text-slate-600 leading-relaxed">
-                  Palnadu Smart Pricing strictly maintains wholesale price confidentiality. Official
-                  volume discounts, customer-tier pricing, and binding quotations are computed
-                  directly by authorized sales managers upon enquiry submission.
-                </p>
-              </div>
+              {/* Indicative Quotation Notice */}
+              <PricingDisclosure variant="basket" />
             </div>
 
             {/* Submission Form Column */}

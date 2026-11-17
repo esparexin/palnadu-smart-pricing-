@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm';
 import type { DbExecutor } from './client.js';
+import { quotationRequests } from './quotation.schema.js';
 import { whatsappMessages, whatsappOptOuts } from './whatsapp.schema.js';
 
 const OPT_OUT_KEYWORDS = ['STOP', 'UNSUBSCRIBE', 'OPTOUT', 'CANCEL', 'QUIT'];
@@ -74,7 +75,7 @@ export async function handleWhatsAppStatusUpdate(
     errorMessage?: string;
   },
 ): Promise<boolean> {
-  const result = await db
+  const query = db
     .update(whatsappMessages)
     .set({
       status: update.status,
@@ -82,7 +83,44 @@ export async function handleWhatsAppStatusUpdate(
     })
     .where(eq(whatsappMessages.wamid, update.wamid));
 
-  return (result as { count?: number })?.count !== 0;
+  let quotationId: string | null = null;
+  if (
+    query &&
+    'returning' in query &&
+    typeof (query as unknown as { returning: unknown }).returning === 'function'
+  ) {
+    const rows = await (
+      query as unknown as {
+        returning: (cols: unknown) => Promise<Array<{ quotationId: string | null }>>;
+      }
+    ).returning({ quotationId: whatsappMessages.quotationId });
+    quotationId = rows[0]?.quotationId ?? null;
+  } else {
+    await query;
+  }
+
+  if (quotationId) {
+    const qDeliveryStatus =
+      update.status === 'delivered'
+        ? 'delivered'
+        : update.status === 'failed'
+          ? 'failed'
+          : update.status === 'sent' || update.status === 'read'
+            ? 'sent'
+            : null;
+    if (qDeliveryStatus) {
+      await db
+        .update(quotationRequests)
+        .set({
+          deliveryStatus: qDeliveryStatus,
+          deliveryError: update.errorMessage || null,
+          lastDeliveryAttemptAt: new Date(),
+        })
+        .where(eq(quotationRequests.id, quotationId));
+    }
+  }
+
+  return true;
 }
 
 export async function recordOutboundMessage(
@@ -96,6 +134,7 @@ export async function recordOutboundMessage(
     rawPayload?: unknown;
     status?: string;
     errorMessage?: string;
+    quotationId?: string | null;
   },
 ) {
   const [created] = await db
@@ -110,6 +149,7 @@ export async function recordOutboundMessage(
       rawPayload: msg.rawPayload as Record<string, unknown>,
       status: msg.status || 'sent',
       errorMessage: msg.errorMessage || null,
+      quotationId: msg.quotationId || null,
     })
     .returning();
 

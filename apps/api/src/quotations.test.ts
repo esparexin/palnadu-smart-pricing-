@@ -47,8 +47,10 @@ describe('Quotations API & Financial Calculation Engine', () => {
       expect(doc.paths['/api/v1/public/enquiries']?.post).toBeDefined();
       expect(doc.paths['/api/v1/catalogue/enquiries']?.post).toBeDefined();
       expect(doc.paths['/api/v1/admin/quotations']?.get).toBeDefined();
+      expect(doc.paths['/api/v1/admin/quotations/metrics']?.get).toBeDefined();
       expect(doc.paths['/api/v1/admin/quotations/{id}']?.get).toBeDefined();
       expect(doc.paths['/api/v1/admin/quotations/{id}/status']?.patch).toBeDefined();
+      expect(doc.paths['/api/v1/admin/quotations/{id}/retry-delivery']?.post).toBeDefined();
     });
   });
 
@@ -216,16 +218,35 @@ describe('Quotations API & Financial Calculation Engine', () => {
       ).toThrow();
     });
 
-    it('rejects public enquiry submissions with missing contact info', async () => {
+    it('rejects public enquiry submissions with missing customer name', async () => {
       const server = await buildServer({ config, database: createMockDatabase() });
       servers.push(server);
 
-      // No email and no phone
+      // Missing customerName (name is mandatory, contact info is optional)
       const res = await server.inject({
         method: 'POST',
         url: '/api/v1/public/enquiries',
         payload: {
-          customerName: 'Test Client',
+          items: [{ productId: randomUUID(), quantity: 1 }],
+        },
+      });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.json()).toMatchObject({
+        error: { code: 'VALIDATION_ERROR' },
+      });
+    });
+
+    it('rejects public enquiry submissions with invalid email format', async () => {
+      const server = await buildServer({ config, database: createMockDatabase() });
+      servers.push(server);
+
+      const res = await server.inject({
+        method: 'POST',
+        url: '/api/v1/public/enquiries',
+        payload: {
+          customerName: 'Valid Name',
+          customerEmail: 'invalid-email-format',
           items: [{ productId: randomUUID(), quantity: 1 }],
         },
       });

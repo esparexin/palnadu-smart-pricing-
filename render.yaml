@@ -28,25 +28,13 @@ services:
         sync: false
       - key: SESSION_TTL_HOURS
         value: 12
+      - key: ALLOWED_ORIGINS
+        sync: false
       - key: STORAGE_DRIVER
-        value: local
-
-  - type: web
-    name: palnadu-web
-    runtime: node
-    plan: starter
-    region: singapore
-    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @palnadu/contracts build && pnpm --filter @palnadu/web build
-    startCommand: pnpm --filter @palnadu/web start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 3000
-      - key: API_INTERNAL_URL
-        fromService:
-          type: web
-          name: palnadu-api
-          property: host
-      - key: NEXT_PUBLIC_API_URL
+        value: cloudinary
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
         sync: false

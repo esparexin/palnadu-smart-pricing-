@@ -41,13 +41,6 @@ export function BasketSubmissionForm({
       return;
     }
 
-    if (!email && !phone) {
-      setValidationError(
-        'Please provide at least an email address or phone number for quote delivery.',
-      );
-      return;
-    }
-
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setValidationError('Please provide a valid email address.');
       return;
@@ -65,18 +58,6 @@ export function BasketSubmissionForm({
       customerNotes: notes || undefined,
     });
   };
-
-  const itemLines = items
-    .map(
-      (item, idx) =>
-        `${idx + 1}. ${item.productName}${item.variantModel ? ` (${item.variantModel})` : item.model ? ` (${item.model})` : ''} - Qty: ${item.quantity} ${item.unit}`,
-    )
-    .join('\n');
-
-  const whatsappText = encodeURIComponent(
-    `Hello, I would like to request an official quotation for the following items:\n\n${itemLines}\n\n*Customer:* ${customerName.trim() || 'Commercial Buyer'}\n${customerPhone.trim() ? `*Phone:* ${customerPhone.trim()}\n` : ''}${customerEmail.trim() ? `*Email:* ${customerEmail.trim()}\n` : ''}${customerNotes.trim() ? `*Notes:* ${customerNotes.trim()}\n` : ''}\nPlease provide authoritative pricing and delivery timelines.`,
-  );
-  const whatsappUrl = `https://wa.me/?text=${whatsappText}`;
 
   return (
     <form
@@ -141,7 +122,8 @@ export function BasketSubmissionForm({
         </div>
       </div>
       <p className="text-[11px] text-slate-500 italic">
-        * Provide either email or phone (or both) to receive your official quotation.
+        * Phone and email are optional. If provided, official estimates and volume discounts are
+        delivered directly.
       </p>
 
       <div>
@@ -159,19 +141,11 @@ export function BasketSubmissionForm({
         />
       </div>
 
-      <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row gap-3">
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          Send via WhatsApp
-        </a>
+      <div className="pt-2 border-t border-slate-100">
         <button
           type="submit"
           disabled={isSubmitting || items.length === 0}
-          className="hidden md:inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:bg-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="hidden md:inline-flex min-h-[44px] w-full items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:bg-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           {isSubmitting ? 'Submitting Quotation Request...' : 'Submit Quotation Request'}
         </button>

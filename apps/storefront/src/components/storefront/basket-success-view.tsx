@@ -53,8 +53,8 @@ export function BasketSuccessView({
             destination logistics.
           </li>
           <li>
-            An official, binding itemized quotation with confidential pricing will be delivered to
-            your contact info.
+            An itemised quotation estimate will be delivered to your contact info. Final commercial
+            pricing and terms will be confirmed during quotation discussion.
           </li>
           <li>
             Please quote reference number{' '}

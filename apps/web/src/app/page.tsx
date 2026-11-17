@@ -10,6 +10,7 @@ import { ProductFilters } from '../components/storefront/product-filters';
 import { LoadingState } from '../components/loading-state';
 import { ErrorState } from '../components/error-state';
 import { EmptyState } from '../components/empty-state';
+import { PricingDisclosure } from '../components/storefront/pricing-disclosure';
 
 const apiClient = new ApiClient();
 
@@ -95,6 +96,7 @@ export default function StorefrontHomePage() {
               Explore enterprise hardware, surveillance equipment, and networking systems. Select
               products and build your quotation request with authoritative technical specifications.
             </p>
+            <PricingDisclosure variant="primary" className="mt-5" />
           </div>
         </div>
       </section>

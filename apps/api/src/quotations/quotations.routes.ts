@@ -9,10 +9,13 @@ import {
   ApiErrorResponseSchema,
   CustomerEnquiryCreateSchema,
   CustomerEnquiryResponseSchema,
+  QuotationMetricsResponseSchema,
 } from '@palnadu/contracts';
 import {
   createQuotationEnquiry,
+  dispatchQuotationWhatsAppEstimate,
   findQuotationById,
+  getQuotationMetrics,
   listQuotations,
   updateQuotationStatus,
   type DatabaseClient,
@@ -48,9 +51,21 @@ export const quotationsRoutes: FastifyPluginAsync<QuotationsRouteOptions> = asyn
     async (request, reply) => {
       try {
         const created = await createQuotationEnquiry(database.db, request.body);
+        let deliveryStatus = 'not_applicable';
+        if (created.customerPhone) {
+          try {
+            const dispatchResult = await dispatchQuotationWhatsAppEstimate(database.db, created.id);
+            deliveryStatus = dispatchResult.deliveryStatus;
+          } catch (dispatchErr) {
+            request.log.error(dispatchErr, 'Failed to dispatch automated WhatsApp quotation');
+            deliveryStatus = 'failed';
+          }
+        }
         return reply.status(201).send({
           referenceNumber: created.referenceNumber,
           status: 'submitted',
+          deliveryStatus: deliveryStatus as
+            'not_applicable' | 'pending' | 'sent' | 'delivered' | 'failed',
           createdAt: created.createdAt.toISOString(),
         });
       } catch (err: unknown) {
@@ -103,6 +118,24 @@ export const adminQuotationsRoutes: FastifyPluginAsync<QuotationsRouteOptions> =
     async (request) => {
       const result = await listQuotations(database.db, request.query);
       return result;
+    },
+  );
+
+  // GET /api/v1/admin/quotations/metrics
+  app.get(
+    '/quotations/metrics',
+    {
+      preHandler: adminRead,
+      schema: {
+        response: {
+          200: QuotationMetricsResponseSchema,
+          401: ApiErrorResponseSchema,
+          403: ApiErrorResponseSchema,
+        },
+      },
+    },
+    async () => {
+      return getQuotationMetrics(database.db);
     },
   );
 
@@ -161,6 +194,34 @@ export const adminQuotationsRoutes: FastifyPluginAsync<QuotationsRouteOptions> =
           .send(errorResponse('QUOTATION_NOT_FOUND', 'Quotation request not found', request.id));
       }
       return updated;
+    },
+  );
+
+  // POST /api/v1/admin/quotations/:id/retry-delivery
+  app.post(
+    '/quotations/:id/retry-delivery',
+    {
+      preHandler: adminManage,
+      schema: {
+        params: IdParamSchema,
+        response: {
+          200: AdminQuotationDetailSchema,
+          401: ApiErrorResponseSchema,
+          403: ApiErrorResponseSchema,
+          404: ApiErrorResponseSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      const quotation = await findQuotationById(database.db, request.params.id);
+      if (!quotation) {
+        return reply
+          .status(404)
+          .send(errorResponse('QUOTATION_NOT_FOUND', 'Quotation request not found', request.id));
+      }
+      await dispatchQuotationWhatsAppEstimate(database.db, request.params.id);
+      const updated = await findQuotationById(database.db, request.params.id);
+      return reply.send(updated!);
     },
   );
 };
