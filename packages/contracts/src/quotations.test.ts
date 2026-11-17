@@ -8,29 +8,44 @@ import {
 } from './quotations.js';
 
 describe('Quotation Contracts', () => {
-  it('validates CustomerEnquiryCreateSchema requiring at least email or phone', () => {
+  it('validates CustomerEnquiryCreateSchema with name only (email and phone optional)', () => {
     const valid = CustomerEnquiryCreateSchema.parse({
+      customerName: 'Kalyan Medaboina',
+      items: [{ productId: randomUUID(), quantity: 2 }],
+    });
+    expect(valid.customerName).toBe('Kalyan Medaboina');
+    expect(valid.customerPhone).toBeUndefined();
+    expect(valid.customerEmail).toBeUndefined();
+    expect(valid.items[0]?.quantity).toBe(2);
+
+    // Also accepts when optional phone is provided
+    const withPhone = CustomerEnquiryCreateSchema.parse({
       customerName: 'Kalyan Medaboina',
       customerPhone: '+919876543210',
       items: [{ productId: randomUUID(), quantity: 2 }],
     });
-    expect(valid.customerName).toBe('Kalyan Medaboina');
-    expect(valid.customerPhone).toBe('+919876543210');
-    expect(valid.items[0]?.quantity).toBe(2);
+    expect(withPhone.customerPhone).toBe('+919876543210');
 
-    // Rejects when neither email nor phone is supplied
+    // Also accepts when optional email is provided
+    const withEmail = CustomerEnquiryCreateSchema.parse({
+      customerName: 'Kalyan Medaboina',
+      customerEmail: 'kalyan@example.com',
+      items: [{ productId: randomUUID(), quantity: 2 }],
+    });
+    expect(withEmail.customerEmail).toBe('kalyan@example.com');
+
+    // Rejects empty customerName
     expect(() =>
       CustomerEnquiryCreateSchema.parse({
-        customerName: 'Kalyan Medaboina',
+        customerName: '   ',
         items: [{ productId: randomUUID(), quantity: 1 }],
       }),
-    ).toThrow('Either email or phone must be provided');
+    ).toThrow();
 
     // Rejects empty items
     expect(() =>
       CustomerEnquiryCreateSchema.parse({
         customerName: 'Kalyan Medaboina',
-        customerEmail: 'kalyan@example.com',
         items: [],
       }),
     ).toThrow();

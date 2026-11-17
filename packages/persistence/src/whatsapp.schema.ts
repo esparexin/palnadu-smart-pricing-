@@ -1,4 +1,5 @@
 import { boolean, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { quotationRequests } from './quotation.schema.js';
 
 export const whatsappConfigurations = pgTable('whatsapp_configurations', {
   id: text('id').primaryKey().default('default'),
@@ -17,6 +18,9 @@ export const whatsappConfigurations = pgTable('whatsapp_configurations', {
 
 export const whatsappMessages = pgTable('whatsapp_messages', {
   id: uuid('id').primaryKey().defaultRandom(),
+  quotationId: uuid('quotation_id').references(() => quotationRequests.id, {
+    onDelete: 'set null',
+  }),
   wamid: text('wamid').notNull().unique(),
   direction: text('direction').notNull(),
   fromNumber: text('from_number').notNull(),

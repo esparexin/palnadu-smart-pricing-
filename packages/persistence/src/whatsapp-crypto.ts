@@ -11,10 +11,16 @@ const IV_LENGTH = 12;
 const DEFAULT_FALLBACK_KEY = 'palnadu-smart-pricing-secret-32b!'; // 32 bytes
 
 function resolveKey(customKey?: string): Buffer {
-  const source =
-    customKey || process.env.SESSION_SECRET || process.env.ENCRYPTION_KEY || DEFAULT_FALLBACK_KEY;
-  const hash = createHmac('sha256', 'palnadu-salt').update(source).digest();
-  return hash;
+  const source = customKey || process.env.SESSION_SECRET || process.env.ENCRYPTION_KEY;
+  if (!source) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'WhatsApp encryption key is not configured. Set SESSION_SECRET or ENCRYPTION_KEY in production.',
+      );
+    }
+    return createHmac('sha256', 'palnadu-salt').update(DEFAULT_FALLBACK_KEY).digest();
+  }
+  return createHmac('sha256', 'palnadu-salt').update(source).digest();
 }
 
 export function encryptSecret(plaintext: string, customKey?: string): string {

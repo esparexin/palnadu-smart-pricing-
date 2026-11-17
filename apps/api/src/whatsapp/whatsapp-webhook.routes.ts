@@ -35,9 +35,15 @@ export const whatsappWebhookRoutes: FastifyPluginAsync<WhatsAppWebhookRoutesOpti
     const challenge = query['hub.challenge'];
 
     const secrets = await getDecryptedWhatsAppSecrets(database.db);
-    const expectedToken = secrets?.verifyToken || 'palnadu_verify_token_default';
+    const configuredToken = secrets?.verifyToken;
 
-    if (mode === 'subscribe' && token === expectedToken && challenge) {
+    if (
+      mode === 'subscribe' &&
+      configuredToken &&
+      configuredToken !== 'palnadu_verify_token_default' &&
+      token === configuredToken &&
+      challenge
+    ) {
       return reply.status(200).type('text/plain').send(challenge);
     }
 
@@ -49,14 +55,15 @@ export const whatsappWebhookRoutes: FastifyPluginAsync<WhatsAppWebhookRoutesOpti
     const signature = request.headers['x-hub-signature-256'] as string | undefined;
     const secrets = await getDecryptedWhatsAppSecrets(database.db);
 
-    if (secrets?.appSecret) {
-      const rawBody =
-        (request as unknown as { rawBody?: Buffer | string }).rawBody ||
-        JSON.stringify(request.body);
-      const isValid = verifyWebhookSignature(rawBody, signature, secrets.appSecret);
-      if (!isValid) {
-        return reply.status(401).send({ error: 'Invalid webhook signature' });
-      }
+    if (!secrets?.appSecret || !signature) {
+      return reply.status(401).send({ error: 'Invalid or missing webhook signature' });
+    }
+
+    const rawBody =
+      (request as unknown as { rawBody?: Buffer | string }).rawBody || JSON.stringify(request.body);
+    const isValid = verifyWebhookSignature(rawBody, signature, secrets.appSecret);
+    if (!isValid) {
+      return reply.status(401).send({ error: 'Invalid webhook signature' });
     }
 
     const payload = request.body as Record<string, unknown>;
@@ -98,10 +105,13 @@ async function processStatusUpdates(
   for (const status of statuses) {
     const wamid = String(status.id || '');
     const currentStatus = String(status.status || '');
+    const errors = status.errors as Array<Record<string, unknown>> | undefined;
+    const errorMessage = errors?.[0]?.message ? String(errors[0].message) : undefined;
     if (wamid && currentStatus) {
       await handleWhatsAppStatusUpdate(database.db, {
         wamid,
         status: currentStatus,
+        errorMessage,
       });
     }
   }

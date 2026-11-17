@@ -27,4 +27,17 @@ describe('QuotationsClient', () => {
       body: JSON.stringify({ status: 'issued' }),
     });
   });
+
+  it('calls getMetrics for server-side metrics', async () => {
+    await client.getMetrics();
+    expect(mockExecutor.request).toHaveBeenCalledWith('/api/v1/admin/quotations/metrics');
+  });
+
+  it('calls retryDelivery with POST method', async () => {
+    await client.retryDelivery('quote-123');
+    expect(mockExecutor.request).toHaveBeenCalledWith(
+      '/api/v1/admin/quotations/quote-123/retry-delivery',
+      { method: 'POST' },
+    );
+  });
 });

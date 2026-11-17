@@ -10,6 +10,15 @@ export const QuotationStatusSchema = z.enum([
   'rejected',
 ]);
 
+export const QuotationDeliveryStatusSchema = z.enum([
+  'not_applicable',
+  'pending',
+  'sent',
+  'delivered',
+  'failed',
+]);
+export type QuotationDeliveryStatus = z.infer<typeof QuotationDeliveryStatusSchema>;
+
 export const CustomerEnquiryItemSchema = z
   .object({
     productId: z.string().uuid(),
@@ -27,16 +36,13 @@ export const CustomerEnquiryCreateSchema = z
     items: z.array(CustomerEnquiryItemSchema).min(1).max(100),
     idempotencyKey: z.string().trim().max(128).nullable().optional(),
   })
-  .strict()
-  .refine((data) => data.customerEmail || data.customerPhone, {
-    message: 'Either email or phone must be provided to submit a quotation request',
-    path: ['customerPhone'],
-  });
+  .strict();
 
 export const CustomerEnquiryResponseSchema = z
   .object({
     referenceNumber: z.string(),
     status: z.literal('submitted'),
+    deliveryStatus: QuotationDeliveryStatusSchema.default('not_applicable'),
     createdAt: z.string().datetime(),
   })
   .strict();
@@ -71,6 +77,11 @@ export const AdminQuotationDetailSchema = z
     customerPhone: z.string().nullable(),
     customerNotes: z.string().nullable(),
     status: QuotationStatusSchema,
+    deliveryStatus: QuotationDeliveryStatusSchema.default('not_applicable'),
+    deliveryProviderId: z.string().nullable().optional(),
+    deliveryError: z.string().nullable().optional(),
+    deliveryAttempts: z.number().int().default(0),
+    lastDeliveryAttemptAt: z.string().datetime().nullable().optional(),
     subtotalPaise: z.number().int().nonnegative(),
     discountTotalPaise: z.number().int().nonnegative(),
     grandTotalPaise: z.number().int().nonnegative(),
@@ -103,6 +114,24 @@ export const AdminQuotationStatusUpdateSchema = z
   })
   .strict();
 
+export const FrequentlyRequestedProductSchema = z
+  .object({
+    productId: z.string().uuid(),
+    productName: z.string(),
+    distinctRequestCount: z.number().int().nonnegative(),
+    totalRequestedQuantity: z.number().int().nonnegative(),
+  })
+  .strict();
+
+export const QuotationMetricsResponseSchema = z
+  .object({
+    totalRequestsReceived: z.number().int().nonnegative(),
+    totalQuotationsGenerated: z.number().int().nonnegative(),
+    totalQuotationValuePaise: z.number().int().nonnegative(),
+    frequentlyRequestedProducts: z.array(FrequentlyRequestedProductSchema),
+  })
+  .strict();
+
 export type QuotationStatus = z.infer<typeof QuotationStatusSchema>;
 export type CustomerEnquiryItem = z.infer<typeof CustomerEnquiryItemSchema>;
 export type CustomerEnquiryCreate = z.infer<typeof CustomerEnquiryCreateSchema>;
@@ -112,3 +141,5 @@ export type AdminQuotationDetail = z.infer<typeof AdminQuotationDetailSchema>;
 export type AdminQuotationListQuery = z.infer<typeof AdminQuotationListQuerySchema>;
 export type AdminQuotationListResponse = z.infer<typeof AdminQuotationListResponseSchema>;
 export type AdminQuotationStatusUpdate = z.infer<typeof AdminQuotationStatusUpdateSchema>;
+export type FrequentlyRequestedProduct = z.infer<typeof FrequentlyRequestedProductSchema>;
+export type QuotationMetricsResponse = z.infer<typeof QuotationMetricsResponseSchema>;

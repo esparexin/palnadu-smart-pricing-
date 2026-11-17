@@ -56,6 +56,14 @@ export function WhatsAppMessageLog({ messages }: WhatsAppMessageLogProps) {
             Failed
           </span>
         );
+      case 'pending':
+        return (
+          <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+            Pending
+          </span>
+        );
+      default:
+        return null;
     }
   };
 

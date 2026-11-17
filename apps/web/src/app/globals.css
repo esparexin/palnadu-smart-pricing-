@@ -47,3 +47,8 @@ body {
   outline: 2px solid #16a34a;
   outline-offset: 2px;
 }
+
+/* Safe area padding for mobile devices with home indicator / gesture bar (iOS / Android) */
+.pb-safe {
+  padding-bottom: max(0.875rem, env(safe-area-inset-bottom, 0.875rem));
+}

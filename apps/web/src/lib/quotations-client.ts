@@ -2,6 +2,7 @@ import type {
   AdminQuotationDetail,
   AdminQuotationListQuery,
   AdminQuotationListResponse,
+  QuotationMetricsResponse,
   QuotationStatus,
 } from '@palnadu/contracts';
 import type { RequestExecutor } from './catalogue-client.js';
@@ -39,6 +40,19 @@ export class QuotationsClient {
       {
         method: 'PATCH',
         body: JSON.stringify({ status }),
+      },
+    );
+  }
+
+  public getMetrics(): Promise<QuotationMetricsResponse> {
+    return this.executor.request<QuotationMetricsResponse>('/api/v1/admin/quotations/metrics');
+  }
+
+  public retryDelivery(id: string): Promise<AdminQuotationDetail> {
+    return this.executor.request<AdminQuotationDetail>(
+      `/api/v1/admin/quotations/${encodeURIComponent(id)}/retry-delivery`,
+      {
+        method: 'POST',
       },
     );
   }

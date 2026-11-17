@@ -53,5 +53,5 @@ This document defines the mandatory smoke test protocol to verify system integri
 ### Journey 8: Operational Probes & Database Migration Readiness
 
 - **8.1 Liveness Probe**: Execute `curl -I https://api.<domain>/api/v1/health`. Confirm HTTP 200 OK.
-- **8.2 Readiness Probe**: Execute `curl -I https://api.<domain>/api/v1/health/ready`. Confirm HTTP 200 OK and database health indicator.
+- **8.2 Readiness Probe**: Execute `curl -I https://api.<domain>/api/v1/ready`. Confirm HTTP 200 OK and database readiness.
 - **8.3 Drizzle Migration Check**: Confirm all schema migrations are applied with `pnpm --filter @palnadu/persistence db:check`.

@@ -33,6 +33,11 @@ export const quotationRequests = pgTable(
     discountTotalPaise: bigint('discount_total_paise', { mode: 'number' }).default(0).notNull(),
     grandTotalPaise: bigint('grand_total_paise', { mode: 'number' }).default(0).notNull(),
     companySnapshot: jsonb('company_snapshot'),
+    deliveryStatus: text('delivery_status').default('not_applicable').notNull(),
+    deliveryProviderId: text('delivery_provider_id'),
+    deliveryError: text('delivery_error'),
+    deliveryAttempts: integer('delivery_attempts').default(0).notNull(),
+    lastDeliveryAttemptAt: timestamp('last_delivery_attempt_at', { withTimezone: true }),
     ...timestamps,
   },
   (table) => [
@@ -43,6 +48,10 @@ export const quotationRequests = pgTable(
     check(
       'quotation_requests_status_ck',
       sql`${table.status} in ('submitted', 'draft', 'issued', 'delivered', 'rejected')`,
+    ),
+    check(
+      'quotation_requests_delivery_status_ck',
+      sql`${table.deliveryStatus} in ('not_applicable', 'pending', 'sent', 'delivered', 'failed')`,
     ),
     check('quotation_requests_subtotal_nonnegative_ck', sql`${table.subtotalPaise} >= 0`),
     check('quotation_requests_discount_nonnegative_ck', sql`${table.discountTotalPaise} >= 0`),

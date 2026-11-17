@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import type { FastifyPluginAsync } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import type { DatabaseClient } from '@palnadu/persistence';
@@ -8,10 +7,9 @@ import {
 } from '@palnadu/contracts';
 import {
   getWhatsAppConfig,
-  isNumberOptedOut,
   listWhatsAppMessages,
   listWhatsAppOptOuts,
-  recordOutboundMessage,
+  sendMetaWhatsAppMessage,
   updateWhatsAppConfig,
 } from '@palnadu/persistence';
 import { requireAdminAuth, requireAdminPermission } from '../auth/auth.plugin.js';
@@ -87,35 +85,40 @@ export const whatsappAdminRoutes: FastifyPluginAsync<WhatsAppAdminRoutesOptions>
       schema: { body: SendWhatsAppMessageRequestSchema },
     },
     async (request, reply) => {
-      const { to, type, text, templateName } = request.body;
+      const { to, type, text, templateName, templateLanguage } = request.body;
 
-      const optedOut = await isNumberOptedOut(database.db, to);
-      if (optedOut) {
+      const result = await sendMetaWhatsAppMessage(database.db, {
+        to,
+        type,
+        text,
+        templateName,
+        templateLanguage,
+      });
+
+      if (!result.success) {
+        if (result.error?.includes('opted out')) {
+          return reply.status(400).send({
+            error: {
+              code: 'RECIPIENT_OPTED_OUT',
+              message: 'Recipient has opted out of WhatsApp messages.',
+            },
+          } as unknown as { success: boolean; wamid: string; status: string });
+        }
+
         return reply.status(400).send({
           error: {
-            code: 'RECIPIENT_OPTED_OUT',
-            message: 'Recipient has opted out of WhatsApp messages.',
+            code: 'WHATSAPP_SEND_FAILED',
+            message: result.error || 'Failed to send WhatsApp message.',
           },
+          wamid: result.wamid,
+          status: result.status,
         } as unknown as { success: boolean; wamid: string; status: string });
       }
 
-      const wamid = `wamid.OUT_${randomUUID()}`;
-      const contentSummary =
-        type === 'template' ? `Template message: ${templateName}` : text || '[Empty text message]';
-
-      const created = await recordOutboundMessage(database.db, {
-        wamid,
-        fromNumber: 'system',
-        toNumber: to,
-        messageType: type,
-        contentSummary,
-        status: 'sent',
-      });
-
       return reply.status(201).send({
         success: true,
-        wamid: created.wamid,
-        status: created.status,
+        wamid: result.wamid,
+        status: result.status,
       });
     },
   );
