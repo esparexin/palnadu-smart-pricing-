@@ -1,4 +1,5 @@
 import { eq } from 'drizzle-orm';
+import { resolveCanonicalBrand } from '@palnadu/contracts';
 import type { DbExecutor } from './client.js';
 import {
   getImportBatchById,
@@ -20,12 +21,41 @@ function slugify(text: string): string {
 }
 
 async function resolveBrand(db: DbExecutor, name?: string): Promise<string | null> {
-  if (!name) return null;
-  const existing = await findBrandByNormalizedNameOrSlug(db, name);
+  const trimmed = name?.trim();
+  if (!trimmed) return null;
+
+  const resolution = resolveCanonicalBrand(trimmed);
+
+  if (resolution.status === 'ambiguous') {
+    throw new Error(`Ambiguous brand '${trimmed}'. ${resolution.reason}`);
+  }
+
+  if (resolution.status === 'canonical' || resolution.status === 'alias') {
+    const canonical = resolution.brand;
+    const existing =
+      (await findBrandByNormalizedNameOrSlug(db, canonical.name, canonical.slug)) ||
+      (await findBrandByNormalizedNameOrSlug(db, trimmed));
+
+    if (existing) return existing.id;
+
+    const created = await createBrand(db, {
+      name: canonical.name,
+      slug: canonical.slug,
+    });
+    return created.id;
+  }
+
+  const existing = await findBrandByNormalizedNameOrSlug(db, trimmed);
   if (existing) return existing.id;
+
+  const cleanSlug = slugify(trimmed);
+  if (!cleanSlug) {
+    throw new Error(`Cannot generate valid slug for brand '${trimmed}'`);
+  }
+
   const created = await createBrand(db, {
-    name,
-    slug: slugify(name) || 'brand-' + Date.now(),
+    name: trimmed,
+    slug: cleanSlug,
   });
   return created.id;
 }

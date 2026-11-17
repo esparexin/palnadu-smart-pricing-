@@ -1,6 +1,7 @@
-import { desc, eq } from 'drizzle-orm';
+import { count, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { DbExecutor } from './client.js';
 import { importBatches, importRows } from './import.schema.js';
+import { productImages, productVariants } from './schema.js';
 
 export async function createImportBatch(
   db: DbExecutor,
@@ -101,4 +102,43 @@ export async function updateImportBatchStatus(
     .where(eq(importBatches.id, batchId))
     .returning();
   return updated;
+}
+
+export async function fetchExistingSkuMap(
+  db: DbExecutor,
+  skus: string[],
+): Promise<Map<string, { id: string; productId: string }>> {
+  const map = new Map<string, { id: string; productId: string }>();
+  if (skus.length === 0) return map;
+
+  const found = await db
+    .select({
+      id: productVariants.id,
+      productId: productVariants.productId,
+      sku: sql<string>`lower(btrim(${productVariants.sku}))`,
+    })
+    .from(productVariants)
+    .where(inArray(sql`lower(btrim(${productVariants.sku}))`, skus));
+
+  for (const v of found) {
+    if (v.sku) map.set(v.sku, { id: v.id, productId: v.productId });
+  }
+  return map;
+}
+
+export async function fetchExistingImageCounts(
+  db: DbExecutor,
+  productIds: string[],
+): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  if (productIds.length === 0) return map;
+  const rows = await db
+    .select({ productId: productImages.productId, count: count() })
+    .from(productImages)
+    .where(inArray(productImages.productId, productIds))
+    .groupBy(productImages.productId);
+  for (const r of rows) {
+    map.set(r.productId, Number(r.count));
+  }
+  return map;
 }

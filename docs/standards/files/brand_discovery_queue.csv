@@ -1,0 +1,32 @@
+brand_name,region,segment,lead_basis,priority,suggested_official_source,status
+Hanwha Vision,global,cameras/NVR,background knowledge; no source retrieved this session,1,hanwhavision.com,queued
+Tiandy,global,cameras/NVR,background knowledge; no source retrieved this session,1,tiandy.com,queued
+Milesight,global,cameras/NVR,background knowledge; no source retrieved this session,1,milesight.com,queued
+HiLook (Hikvision sub-brand),global/india,cameras/NVR/DVR,background knowledge; no source retrieved this session,1,hikvision.com,queued
+HiWatch (Hikvision sub-brand),global,cameras/NVR/DVR,background knowledge; no source retrieved this session,2,hikvision.com,queued
+Imou (Dahua sub-brand),global/india,Wi-Fi cameras,background knowledge; no source retrieved this session,1,imoulife.com,queued
+Seagate (SkyHawk),global,surveillance HDD,background knowledge; no source retrieved this session,1,seagate.com,queued
+Toshiba (S300),global,surveillance HDD,background knowledge; no source retrieved this session,2,toshiba-storage.com,queued
+Ubiquiti (UniFi Protect),global,cameras/NVR,background knowledge; no source retrieved this session,2,ui.com,queued
+Lorex,NA,cameras/NVR,background knowledge; no source retrieved this session,3,lorex.com,queued
+Swann,global,cameras/DVR,background knowledge; no source retrieved this session,3,swann.com,queued
+Annke,global,cameras/NVR,background knowledge; no source retrieved this session,2,annke.com,queued
+Amcrest,NA/global,cameras/NVR,background knowledge; no source retrieved this session,3,amcrest.com,queued
+GeoVision,global,cameras/NVR,background knowledge; no source retrieved this session,3,geovision.com.tw,queued
+Mobotix,EU/global,cameras,background knowledge; no source retrieved this session,3,mobotix.com,queued
+Provision-ISR,global,cameras/NVR,background knowledge; no source retrieved this session,3,provision-isr.com,queued
+Digital Watchdog,NA,cameras/NVR,background knowledge; no source retrieved this session,3,digital-watchdog.com,queued
+Speco Technologies,NA,cameras/DVR,background knowledge; no source retrieved this session,3,specotech.com,queued
+Vicon,NA,cameras/VMS,background knowledge; no source retrieved this session,3,vicon-security.com,queued
+Illustra (Johnson Controls),global,cameras,background knowledge; no source retrieved this session,3,illustracameras.com,queued
+Arecont Vision,NA,multi-sensor cameras,background knowledge; no source retrieved this session,3,arecontvision.com,queued
+Raytec,UK/global,illuminators (accessory),background knowledge; no source retrieved this session,3,raytecled.com,queued
+Videotec,EU/global,housings/PTZ (accessory),background knowledge; no source retrieved this session,3,videotec.com,queued
+TVT Digital,global OEM,DVR/NVR/cameras,background knowledge; no source retrieved this session,2,tvt.net.cn,queued
+LILIN,global,cameras/NVR,background knowledge; no source retrieved this session,3,meritlilin.com,queued
+Grandstream,global,IP cameras/intercom,background knowledge; no source retrieved this session,3,grandstream.com,queued
+Wyze,NA,consumer cameras,background knowledge; no source retrieved this session,3,wyze.com,queued
+Eufy (Anker),global/india,consumer cameras,background knowledge; no source retrieved this session,3,eufy.com,queued
+Arlo,NA/global,consumer cameras,background knowledge; no source retrieved this session,3,arlo.com,queued
+Ring,NA,consumer cameras/doorbells,background knowledge; no source retrieved this session,3,ring.com,queued
+Google Nest,global,consumer cameras,background knowledge; no source retrieved this session,3,store.google.com,queued

@@ -92,3 +92,4 @@ export * from './inventory.js';
 export * from './whatsapp.js';
 export * from './integrations.js';
 export * from './pricing-disclosures.js';
+export * from './brand-registry.js';
