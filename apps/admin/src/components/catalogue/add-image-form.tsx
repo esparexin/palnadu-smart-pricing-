@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { PRODUCT_IMAGE_LIMITS } from '@palnadu/contracts';
 import { apiClient } from '../../lib/api-client';
 
 export interface AddImageFormProps {
@@ -8,13 +9,22 @@ export interface AddImageFormProps {
   imagesCount: number;
   onSuccess: () => void;
   onCancel: () => void;
+  replaceImageId?: string;
+  initialAltText?: string;
 }
 
-export function AddImageForm({ productId, imagesCount, onSuccess, onCancel }: AddImageFormProps) {
+export function AddImageForm({
+  productId,
+  imagesCount,
+  onSuccess,
+  onCancel,
+  replaceImageId,
+  initialAltText = '',
+}: AddImageFormProps) {
   const [uploadMode, setUploadMode] = useState<'file' | 'url'>('file');
   const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState('');
-  const [altText, setAltText] = useState('');
+  const [altText, setAltText] = useState(initialAltText);
   const [isPrimary, setIsPrimary] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +32,14 @@ export function AddImageForm({ productId, imagesCount, onSuccess, onCancel }: Ad
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!replaceImageId && imagesCount >= PRODUCT_IMAGE_LIMITS.MAX_PER_PRODUCT) {
+      setError(
+        `Cannot upload: Product already has the maximum of ${PRODUCT_IMAGE_LIMITS.MAX_PER_PRODUCT} images.`,
+      );
+      return;
+    }
+
     if (uploadMode === 'file' && !file) {
       setError('Please select an image file to upload.');
       return;
@@ -33,19 +51,32 @@ export function AddImageForm({ productId, imagesCount, onSuccess, onCancel }: Ad
 
     setIsSubmitting(true);
     try {
-      if (uploadMode === 'file' && file) {
-        await apiClient.media.uploadProductImage(productId, file, {
-          altText: altText.trim(),
-          isPrimary,
-        });
+      if (replaceImageId) {
+        if (uploadMode === 'file' && file) {
+          await apiClient.media.replaceProductImage(productId, replaceImageId, file, {
+            altText: altText.trim(),
+          });
+        } else {
+          await apiClient.catalogue.updateImage(productId, replaceImageId, {
+            url: url.trim(),
+            altText: altText.trim(),
+          });
+        }
       } else {
-        await apiClient.catalogue.createImage(productId, {
-          url: url.trim(),
-          altText: altText.trim(),
-          isPrimary,
-          sortOrder: imagesCount,
-          rightsStatus: 'manual_upload',
-        });
+        if (uploadMode === 'file' && file) {
+          await apiClient.media.uploadProductImage(productId, file, {
+            altText: altText.trim(),
+            isPrimary,
+          });
+        } else {
+          await apiClient.catalogue.createImage(productId, {
+            url: url.trim(),
+            altText: altText.trim(),
+            isPrimary,
+            sortOrder: imagesCount,
+            rightsStatus: 'manual_upload',
+          });
+        }
       }
       onSuccess();
     } catch (err: unknown) {
@@ -60,6 +91,10 @@ export function AddImageForm({ productId, imagesCount, onSuccess, onCancel }: Ad
       onSubmit={handleSubmit}
       className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3"
     >
+      <div className="font-semibold text-xs text-slate-700">
+        {replaceImageId ? 'Replace Image' : 'Add New Image'}
+      </div>
+
       {error && (
         <div className="rounded-md bg-red-50 p-2.5 text-red-800 text-xs" role="alert">
           {error}
@@ -132,18 +167,20 @@ export function AddImageForm({ productId, imagesCount, onSuccess, onCancel }: Ad
         />
       </div>
 
-      <div className="flex items-center gap-2">
-        <input
-          id="img-primary"
-          type="checkbox"
-          checked={isPrimary}
-          onChange={(e) => setIsPrimary(e.target.checked)}
-          className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-        />
-        <label htmlFor="img-primary" className="text-xs font-medium text-slate-700">
-          Set as primary catalogue cover image
-        </label>
-      </div>
+      {!replaceImageId && (
+        <div className="flex items-center gap-2">
+          <input
+            id="img-primary"
+            type="checkbox"
+            checked={isPrimary}
+            onChange={(e) => setIsPrimary(e.target.checked)}
+            className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+          />
+          <label htmlFor="img-primary" className="text-xs font-medium text-slate-700">
+            Set as primary catalogue cover image
+          </label>
+        </div>
+      )}
 
       <div className="flex justify-end gap-2 pt-2">
         <button
@@ -158,7 +195,13 @@ export function AddImageForm({ productId, imagesCount, onSuccess, onCancel }: Ad
           disabled={isSubmitting}
           className="touch-target rounded-md bg-emerald-600 px-3 py-1.5 font-medium text-xs text-white hover:bg-emerald-700 disabled:opacity-50"
         >
-          {isSubmitting ? 'Saving...' : 'Save Image'}
+          {isSubmitting
+            ? replaceImageId
+              ? 'Replacing...'
+              : 'Saving...'
+            : replaceImageId
+              ? 'Replace Image'
+              : 'Save Image'}
         </button>
       </div>
     </form>

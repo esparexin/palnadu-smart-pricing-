@@ -168,4 +168,87 @@ describe('Catalogue Contracts (packages/contracts)', () => {
     expect(item.relationshipType).toBe('complementary');
     expect(item.product.name).toBe('Weatherproof Junction Box');
   });
+
+  describe('Product Image Limits (2–8)', () => {
+    const baseProduct = {
+      name: 'Test Camera',
+      slug: 'test-camera',
+      unit: 'piece',
+      mrpPaise: 100000,
+      offerPricePaise: 80000,
+    };
+
+    const makeImages = (count: number) =>
+      Array.from({ length: count }, (_, i) => ({
+        url: `https://example.com/images/img-${i + 1}.webp`,
+        altText: `Image ${i + 1}`,
+        isPrimary: i === 0,
+        rightsStatus: 'manual_upload' as const,
+      }));
+
+    it('rejects published product with 0 images', () => {
+      expect(() =>
+        AdminProductCreateSchema.parse({
+          ...baseProduct,
+          status: 'published',
+          images: [],
+        }),
+      ).toThrow(/between 2 and 8 images/);
+    });
+
+    it('rejects published product with 1 image', () => {
+      expect(() =>
+        AdminProductCreateSchema.parse({
+          ...baseProduct,
+          status: 'published',
+          images: makeImages(1),
+        }),
+      ).toThrow(/between 2 and 8 images/);
+    });
+
+    it('accepts published product with 2 images', () => {
+      const parsed = AdminProductCreateSchema.parse({
+        ...baseProduct,
+        status: 'published',
+        images: makeImages(2),
+      });
+      expect(parsed.images).toHaveLength(2);
+      expect(parsed.status).toBe('published');
+    });
+
+    it('accepts product with 8 images', () => {
+      const parsed = AdminProductCreateSchema.parse({
+        ...baseProduct,
+        status: 'published',
+        images: makeImages(8),
+      });
+      expect(parsed.images).toHaveLength(8);
+    });
+
+    it('rejects product with 9 images (exceeds max 8)', () => {
+      expect(() =>
+        AdminProductCreateSchema.parse({
+          ...baseProduct,
+          status: 'draft',
+          images: makeImages(9),
+        }),
+      ).toThrow(/more than 8 images/);
+    });
+
+    it('accepts draft product with 0 or 1 image', () => {
+      const draftZero = AdminProductCreateSchema.parse({
+        ...baseProduct,
+        status: 'draft',
+        images: [],
+      });
+      expect(draftZero.images).toHaveLength(0);
+
+      const draftOne = AdminProductCreateSchema.parse({
+        ...baseProduct,
+        status: 'draft',
+        images: makeImages(1),
+      });
+      expect(draftOne.images).toHaveLength(1);
+    });
+  });
 });

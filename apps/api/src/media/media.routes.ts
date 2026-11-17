@@ -5,6 +5,7 @@ import {
   createProductImage,
   createStorageAdapter,
   processAndOptimizeImage,
+  updateProductImage,
   type DatabaseClient,
   type StoragePort,
 } from '@palnadu/persistence';
@@ -123,8 +124,72 @@ export const mediaRoutes: FastifyPluginAsync<MediaRouteOptions> = async (rawApp,
 
         return reply.status(201).send(created);
       } catch (err: unknown) {
+        const ec = (err as { code?: string })?.code;
+        if (ec === 'IMAGE_LIMIT_EXCEEDED') {
+          return reply
+            .status(400)
+            .send(errorResponse('IMAGE_LIMIT_EXCEEDED', (err as Error).message, request.id));
+        }
         const message = err instanceof Error ? err.message : 'Image upload failed';
         return reply.status(400).send(errorResponse('IMAGE_UPLOAD_ERROR', message, request.id));
+      }
+    },
+  );
+
+  // POST /api/v1/admin/products/:id/images/:imageId/replace (Replace image binary)
+  rawApp.post(
+    '/products/:id/images/:imageId/replace',
+    { preHandler: adminManage },
+    async (request, reply) => {
+      const paramsSchema = z.object({ id: z.string().uuid(), imageId: z.string().uuid() });
+      const paramsResult = paramsSchema.safeParse(request.params);
+      if (!paramsResult.success) {
+        return reply
+          .status(400)
+          .send(errorResponse('BAD_REQUEST', 'Invalid parameters', request.id));
+      }
+      const { id: productId, imageId } = paramsResult.data;
+
+      try {
+        const part = await request.file();
+        if (!part) {
+          return reply
+            .status(400)
+            .send(errorResponse('BAD_REQUEST', 'No image file uploaded', request.id));
+        }
+
+        const buffer = await part.toBuffer();
+        const optimized = await processAndOptimizeImage(
+          buffer,
+          part.mimetype,
+          `products/${productId}`,
+        );
+        const uploadResult = await storage.upload(
+          optimized.key,
+          optimized.buffer,
+          optimized.contentType,
+        );
+
+        const altText =
+          typeof part.fields.altText === 'object' && 'value' in part.fields.altText
+            ? String(part.fields.altText.value)
+            : undefined;
+
+        const updated = await updateProductImage(database.db, productId, imageId, {
+          url: uploadResult.url,
+          ...(altText !== undefined ? { altText } : {}),
+        });
+
+        if (!updated) {
+          return reply
+            .status(404)
+            .send(errorResponse('IMAGE_NOT_FOUND', 'Image not found', request.id));
+        }
+
+        return reply.status(200).send(updated);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Image replacement failed';
+        return reply.status(400).send(errorResponse('IMAGE_REPLACE_ERROR', message, request.id));
       }
     },
   );

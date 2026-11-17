@@ -57,12 +57,6 @@ export async function approveCandidateAndCreateImage(
     throw new Error('Image candidate not found');
   }
 
-  const [approved] = await db
-    .update(productImageCandidates)
-    .set({ status: 'approved', updatedAt: new Date() })
-    .where(eq(productImageCandidates.id, candidateId))
-    .returning();
-
   const createdImage = await createProductImage(db, candidate.productId, {
     url: candidate.sourceUrl,
     altText: options.altText || candidate.attributionText || '',
@@ -70,6 +64,12 @@ export async function approveCandidateAndCreateImage(
     variantId: options.variantId ?? null,
     rightsStatus: 'verified_commercial',
   });
+
+  const [approved] = await db
+    .update(productImageCandidates)
+    .set({ status: 'approved', updatedAt: new Date() })
+    .where(eq(productImageCandidates.id, candidateId))
+    .returning();
 
   return { candidate: approved, image: createdImage };
 }

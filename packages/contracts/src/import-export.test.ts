@@ -83,4 +83,29 @@ describe('import-export contracts', () => {
     const parsed = ImportBatchResponseSchema.parse(batch);
     expect(parsed.appliedRows).toBe(5);
   });
+
+  describe('ProductImportRowInputSchema imageUrls validation', () => {
+    const baseRow = {
+      sku: 'WIDGET-002',
+      name: 'Widget with Images',
+    };
+
+    it('accepts product import row with up to 8 image URLs', () => {
+      const parsed = ProductImportRowInputSchema.parse({
+        ...baseRow,
+        imageUrls: ['https://example.com/img1.jpg', 'https://example.com/img2.jpg'],
+      });
+      expect(parsed.imageUrls).toHaveLength(2);
+    });
+
+    it('rejects product import row with 9 image URLs', () => {
+      const nineImages = Array.from({ length: 9 }, (_, i) => `https://example.com/img${i + 1}.jpg`);
+      expect(() =>
+        ProductImportRowInputSchema.parse({
+          ...baseRow,
+          imageUrls: nineImages,
+        }),
+      ).toThrow(/more than 8 images/);
+    });
+  });
 });

@@ -1,7 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import type { AdminProductDetailResponse, ProductStatus } from '@palnadu/contracts';
+import {
+  PRODUCT_IMAGE_LIMITS,
+  type AdminProductDetailResponse,
+  type ProductStatus,
+} from '@palnadu/contracts';
 import { apiClient } from '../../lib/api-client';
 import { PricingFields, type PricingState } from './pricing-fields';
 
@@ -41,6 +45,13 @@ export function ProductOverviewCard({ product, onRefresh }: ProductOverviewCardP
 
     if (mrpPaise > 0 && offerPricePaise > mrpPaise) {
       setError('Offer price cannot exceed MRP.');
+      return;
+    }
+
+    if (status === 'published' && product.images.length < PRODUCT_IMAGE_LIMITS.MIN_FOR_PUBLISHED) {
+      setError(
+        `Cannot publish product: At least ${PRODUCT_IMAGE_LIMITS.MIN_FOR_PUBLISHED} images are required (currently has ${product.images.length}). Add images below before publishing.`,
+      );
       return;
     }
 
@@ -134,6 +145,9 @@ export function ProductOverviewCard({ product, onRefresh }: ProductOverviewCardP
             <option value="published">Published (Storefront Active)</option>
             <option value="archived">Archived</option>
           </select>
+          <p className="text-[11px] text-slate-500 mt-1">
+            Requires 2–8 images (currently has {product.images.length}).
+          </p>
         </div>
 
         <div>

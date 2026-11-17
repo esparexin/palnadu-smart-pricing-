@@ -65,6 +65,27 @@ export class MediaClient {
     );
   }
 
+  public replaceProductImage(
+    productId: string,
+    imageId: string,
+    file: File | Blob,
+    options?: { altText?: string },
+  ): Promise<ImageResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (options?.altText) {
+      formData.append('altText', options.altText);
+    }
+
+    return this.executor.request<ImageResponse>(
+      `/api/v1/admin/products/${productId}/images/${imageId}/replace`,
+      {
+        method: 'POST',
+        body: formData,
+      },
+    );
+  }
+
   public discoverImages(productId: string): Promise<ImageCandidateResponse[]> {
     return this.executor.request<ImageCandidateResponse[]>(
       `/api/v1/admin/products/${productId}/images/discover`,

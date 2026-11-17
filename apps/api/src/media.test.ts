@@ -55,6 +55,7 @@ function mockAuthSession(mockDb: DatabaseClient, sessionId = randomUUID(), userI
           ]),
         }),
       }),
+      where: vi.fn().mockResolvedValue([{ count: 0 }]),
     }),
   } as never);
 }

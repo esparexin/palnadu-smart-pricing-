@@ -132,4 +132,50 @@ describe('import-export service', () => {
     expect(parsed.rows.length).toBe(1);
     expect(parsed.rows[0].reason).toBe('Duplicate SKU');
   });
+
+  it('validates image count limits for published products and max 8 images per product', async () => {
+    const csvContent = [
+      'sku,name,status,mrp_paise,selling_price_paise,image_urls',
+      // Row 2: published with 0 images -> invalid
+      'SKU-PUB-0,Pub 0,published,10000,8000,',
+      // Row 3: published with 1 image -> invalid
+      'SKU-PUB-1,Pub 1,published,10000,8000,https://example.com/1.jpg',
+      // Row 4: published with 2 images -> valid
+      'SKU-PUB-2,Pub 2,published,10000,8000,https://example.com/1.jpg;https://example.com/2.jpg',
+      // Row 5: draft with 9 images -> invalid (exceeds max 8)
+      'SKU-DFT-9,Draft 9,draft,10000,8000,' +
+        Array.from({ length: 9 }, (_, i) => `https://example.com/${i + 1}.jpg`).join(';'),
+    ].join('\n');
+
+    const fakeDb = {
+      select: vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
+        }),
+      }),
+      insert: vi.fn().mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([{ id: 'mock-batch-images' }]),
+        }),
+      }),
+    } as unknown as DbExecutor;
+
+    const preview = await validateAndPreviewImport(fakeDb, {
+      csvContent,
+      mode: 'create_only',
+    });
+
+    expect(preview.totalRows).toBe(4);
+    expect(preview.validRows).toBe(1); // Only SKU-PUB-2 is valid
+    expect(preview.invalidRows).toBe(3);
+
+    const pub0Error = preview.errors.find((e) => e.rowNumber === 2);
+    expect(pub0Error?.reason).toContain('Published products must have between 2 and 8 images');
+
+    const pub1Error = preview.errors.find((e) => e.rowNumber === 3);
+    expect(pub1Error?.reason).toContain('Published products must have between 2 and 8 images');
+
+    const dft9Error = preview.errors.find((e) => e.rowNumber === 5);
+    expect(dft9Error?.reason).toContain('Product cannot have more than 8 images');
+  });
 });
