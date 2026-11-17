@@ -59,12 +59,6 @@ export function StorefrontHeader() {
               </span>
             )}
           </Link>
-          <Link
-            href="/admin"
-            className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Admin Portal
-          </Link>
         </nav>
 
         {/* Mobile Action Controls */}
@@ -151,13 +145,6 @@ export function StorefrontHeader() {
                   {itemCount}
                 </span>
               )}
-            </Link>
-            <Link
-              href="/admin"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex min-h-[44px] items-center rounded-md px-3 py-2 text-base font-medium text-blue-600 hover:bg-blue-50"
-            >
-              Admin Portal
             </Link>
           </div>
         </div>

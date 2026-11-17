@@ -38,10 +38,10 @@ export function StorefrontFooter() {
               </li>
               <li>
                 <Link
-                  href="/admin"
+                  href="/basket"
                   className="text-sm text-slate-600 hover:text-blue-600 focus:outline-none focus:underline"
                 >
-                  Admin Portal
+                  Quote Basket
                 </Link>
               </li>
             </ul>
