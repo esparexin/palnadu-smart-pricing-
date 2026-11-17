@@ -45,22 +45,6 @@ export function StorefrontFooter() {
                   Quote Basket
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/terms"
-                  className="text-sm text-slate-600 hover:text-blue-600 focus:outline-none focus:underline"
-                >
-                  Terms & Conditions
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/privacy"
-                  className="text-sm text-slate-600 hover:text-blue-600 focus:outline-none focus:underline"
-                >
-                  Privacy Policy
-                </Link>
-              </li>
             </ul>
           </div>
           <div>
