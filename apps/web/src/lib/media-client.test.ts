@@ -104,4 +104,31 @@ describe('MediaClient', () => {
     const rejectRes = await client.rejectCandidate(productId, candidateId);
     expect(rejectRes.success).toBe(true);
   });
+
+  it('supports sequential multi-image uploads for newly created product and retries failures', async () => {
+    const client = new MediaClient(mockExecutor);
+    const productId = 'prod-multi-456';
+    const files = [
+      new Blob(['bytes-1'], { type: 'image/jpeg' }),
+      new Blob(['bytes-2'], { type: 'image/jpeg' }),
+    ];
+
+    vi.mocked(mockExecutor.request)
+      .mockResolvedValueOnce({ id: 'img-1', url: 'https://cdn.example.com/1.webp' })
+      .mockRejectedValueOnce(new Error('Network timeout'))
+      .mockResolvedValueOnce({ id: 'img-2', url: 'https://cdn.example.com/2.webp' });
+
+    // First attempt: image 1 succeeds, image 2 fails
+    const res1 = await client.uploadProductImage(productId, files[0]!, { isPrimary: true });
+    expect(res1.id).toBe('img-1');
+
+    await expect(
+      client.uploadProductImage(productId, files[1]!, { isPrimary: false }),
+    ).rejects.toThrow('Network timeout');
+
+    // Retry attempt: only image 2 is retried
+    const res2 = await client.uploadProductImage(productId, files[1]!, { isPrimary: false });
+    expect(res2.id).toBe('img-2');
+    expect(mockExecutor.request).toHaveBeenCalledTimes(3);
+  });
 });
