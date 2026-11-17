@@ -281,8 +281,9 @@ describe('Admin Catalogue API (PostgreSQL Integration)', () => {
         offerPricePaise: 270000,
         discountType: 'percentage',
         discountValue: 1000,
-        status: 'published',
+        status: 'draft',
       });
+      expect(otherRes.statusCode).toBe(201);
       otherProductId = otherRes.json().id;
     });
 
