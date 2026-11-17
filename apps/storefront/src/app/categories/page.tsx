@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { CategoryResponse } from '@palnadu/contracts';
 import { apiClient } from '../../lib/api-client';
 import { StorefrontHeader } from '../../components/storefront/storefront-header';
@@ -15,16 +16,20 @@ export default function CategoriesBrowsePage() {
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
+  const router = useRouter();
 
   const fetchCategories = () => {
     setLoading(true);
     setError(null);
     apiClient.storefront
-      .listCategories(search.trim() || undefined)
+      .listCategories()
       .then((data) => {
         setCategories(data);
         setLoading(false);
+        // If only one category exists, avoid redundant category selection and display its products directly
+        if (data.length === 1 && data[0]) {
+          router.replace(`/?category=${data[0].slug}`);
+        }
       })
       .catch((err) => {
         setError(err instanceof Error ? err.message : 'Failed to load categories');
@@ -34,7 +39,7 @@ export default function CategoriesBrowsePage() {
 
   useEffect(() => {
     fetchCategories();
-  }, [search]);
+  }, []);
 
   // Group top-level categories and subcategories
   const rootCategories = categories.filter((c) => !c.parentId);
@@ -51,58 +56,6 @@ export default function CategoriesBrowsePage() {
     <div className="flex min-h-screen flex-col bg-slate-50">
       <StorefrontHeader />
 
-      {/* Prominent Search & Category Header */}
-      <section className="border-b border-slate-200 bg-white py-4 sm:py-6 shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-                Product Categories
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                Select an active category to browse available commercial products
-              </p>
-            </div>
-
-            <div className="w-full sm:max-w-xs">
-              <label htmlFor="category-search" className="sr-only">
-                Filter categories
-              </label>
-              <div className="relative flex items-center">
-                <span className="pointer-events-none absolute left-3 text-slate-400">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                </span>
-                <input
-                  id="category-search"
-                  type="search"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Filter categories..."
-                  className="w-full min-h-[44px] rounded-lg border border-slate-300 pl-9 pr-8 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                {search && (
-                  <button
-                    type="button"
-                    onClick={() => setSearch('')}
-                    className="absolute right-2.5 p-1 text-slate-400 hover:text-slate-600 rounded"
-                    aria-label="Clear filter"
-                  >
-                    &times;
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Categories Content */}
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 space-y-6">
         {loading ? (
@@ -117,8 +70,8 @@ export default function CategoriesBrowsePage() {
         ) : categories.length === 0 ? (
           <EmptyState
             title="No categories found"
-            description="No active categories match your current search or are currently available."
-            action={{ label: 'Clear Search', onClick: () => setSearch('') }}
+            description="No active categories with published products are currently available."
+            action={{ label: 'Return to Catalogue', onClick: () => router.push('/') }}
           />
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

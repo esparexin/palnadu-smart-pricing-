@@ -26,12 +26,12 @@ export function StorefrontHeader() {
     if (mobileMenuOpen) {
       setMobileMenuOpen(false);
     }
-    const searchInput = document.getElementById('catalogue-search') as HTMLInputElement | null;
-    if (searchInput) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      searchInput.focus();
-    } else {
-      router.push('/?focus=search');
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname === '/') {
+        window.dispatchEvent(new CustomEvent('toggle-mobile-search'));
+      } else {
+        router.push('/?focus=search');
+      }
     }
   };
 

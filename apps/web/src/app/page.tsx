@@ -316,15 +316,40 @@ export default function StorefrontHomePage() {
 
   const { itemCount, isMounted } = useBasket();
   const [, startTransition] = useTransition();
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       if (params.get('focus') === 'search') {
-        const input = document.getElementById('catalogue-search') as HTMLInputElement | null;
-        input?.focus();
+        setIsMobileSearchOpen(true);
+        setTimeout(() => {
+          const input = document.getElementById('catalogue-search') as HTMLInputElement | null;
+          input?.focus();
+        }, 50);
       }
+      const q = params.get('q');
+      if (q) setSearch(q);
+      const cat = params.get('category');
+      if (cat) setSelectedCategory(cat);
     }
+  }, []);
+
+  useEffect(() => {
+    const handleToggle = () => {
+      setIsMobileSearchOpen((prev) => {
+        const next = !prev;
+        if (next) {
+          setTimeout(() => {
+            const input = document.getElementById('catalogue-search') as HTMLInputElement | null;
+            input?.focus();
+          }, 50);
+        }
+        return next;
+      });
+    };
+    window.addEventListener('toggle-mobile-search', handleToggle);
+    return () => window.removeEventListener('toggle-mobile-search', handleToggle);
   }, []);
 
   useEffect(() => {
@@ -399,8 +424,12 @@ export default function StorefrontHomePage() {
     <div className="flex min-h-screen flex-col bg-slate-50">
       <StorefrontHeader />
 
-      {/* Prominent Search Bar Section - Sticky Top */}
-      <section className="sticky top-[61px] z-20 border-b border-slate-200 bg-white/95 backdrop-blur py-2.5 sm:py-3.5 shadow-sm">
+      {/* Prominent Search Bar Section - Sticky Top. Always visible on desktop (md:block), toggled on mobile */}
+      <section
+        className={`${
+          isMobileSearchOpen ? 'block' : 'hidden md:block'
+        } sticky top-[61px] z-20 border-b border-slate-200 bg-white/95 backdrop-blur py-2.5 sm:py-3.5 shadow-sm transition-all`}
+      >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <form
             onSubmit={(e) => {
@@ -439,28 +468,38 @@ export default function StorefrontHomePage() {
                   setPage(1);
                 }}
                 placeholder="Search products by name, model, SKU, or brand..."
-                className="w-full min-h-[48px] rounded-xl border border-slate-300 bg-slate-50/50 pl-11 pr-10 text-sm sm:text-base text-slate-900 placeholder:text-slate-400 transition focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full min-h-[48px] rounded-xl border border-slate-300 bg-slate-50/50 pl-11 pr-24 text-sm sm:text-base text-slate-900 placeholder:text-slate-400 transition focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               />
-              {search && (
+              <div className="absolute right-3 flex items-center gap-1">
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearch('');
+                      setPage(1);
+                    }}
+                    className="p-1.5 text-slate-400 hover:text-slate-600 focus:outline-none rounded-lg"
+                    aria-label="Clear search"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                )}
                 <button
                   type="button"
-                  onClick={() => {
-                    setSearch('');
-                    setPage(1);
-                  }}
-                  className="absolute right-3 p-1.5 text-slate-400 hover:text-slate-600 focus:outline-none rounded-lg"
-                  aria-label="Clear search"
+                  onClick={() => setIsMobileSearchOpen(false)}
+                  className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50 focus:outline-none md:hidden"
+                  aria-label="Close search"
                 >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  Close
                 </button>
-              )}
+              </div>
             </div>
           </form>
         </div>
