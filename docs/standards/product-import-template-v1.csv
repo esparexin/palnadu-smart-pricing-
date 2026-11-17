@@ -1,0 +1,3 @@
+sku,name,slug,brand_name,category_name,description,status,mrp_paise,selling_price_paise,cost_price_paise,min_selling_price_paise,image_urls
+PROD-001,Industrial Widget A,industrial-widget-a,Acme Heavy,Tools & Machinery,Heavy-duty industrial widget for high torque applications,draft,150000,120000,90000,110000,
+PROD-002,Standard Precision Drill,standard-precision-drill,Acme Heavy,Tools & Machinery,Precision electric drill 500W,draft,250000,210000,160000,195000,
