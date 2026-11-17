@@ -21,6 +21,7 @@ import {
   type DatabaseClient,
 } from '@palnadu/persistence';
 import { errorResponse, requireAdminAuth, requireAdminPermission } from '../auth/auth.guards.js';
+import { bumpCatalogueRevision } from './catalogue-revision.js';
 
 export interface CatalogueRouteOptions {
   database: DatabaseClient;
@@ -57,6 +58,7 @@ export const brandsRoutes: FastifyPluginAsync<CatalogueRouteOptions> = async (ra
       }
 
       const created = await createBrand(database.db, { name, slug });
+      bumpCatalogueRevision(request.log);
       return reply.status(201).send({
         id: created.id,
         name: created.name,
@@ -166,6 +168,7 @@ export const brandsRoutes: FastifyPluginAsync<CatalogueRouteOptions> = async (ra
       }
 
       const updated = await updateBrand(database.db, id, { name, slug });
+      bumpCatalogueRevision(request.log);
       return {
         id: updated!.id,
         name: updated!.name,
@@ -213,6 +216,7 @@ export const brandsRoutes: FastifyPluginAsync<CatalogueRouteOptions> = async (ra
       }
 
       await deleteBrand(database.db, id);
+      bumpCatalogueRevision(request.log);
       return { success: true as const };
     },
   );

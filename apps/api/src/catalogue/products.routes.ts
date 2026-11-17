@@ -23,6 +23,7 @@ import {
   type DatabaseClient,
 } from '@palnadu/persistence';
 import { errorResponse, requireAdminAuth, requireAdminPermission } from '../auth/auth.guards.js';
+import { bumpCatalogueRevision } from './catalogue-revision.js';
 import { IdParamSchema, toProductDetailDto } from './catalogue.helpers.js';
 
 export interface CatalogueRouteOptions {
@@ -82,6 +83,7 @@ export const productsRoutes: FastifyPluginAsync<CatalogueRouteOptions> = async (
         const created = await database.db.transaction((tx) =>
           createProduct(tx, { ...data, brandId, categoryIds }),
         );
+        bumpCatalogueRevision(request.log);
         const detail = await fetchProductDetail(database.db, created.id);
         return reply.status(201).send(toProductDetailDto(detail!));
       } catch (err: unknown) {
@@ -205,6 +207,7 @@ export const productsRoutes: FastifyPluginAsync<CatalogueRouteOptions> = async (
         await database.db.transaction((tx) =>
           updateProduct(tx, id, { ...data, brandId, categoryIds, slug }),
         );
+        bumpCatalogueRevision(request.log);
         const detail = await fetchProductDetail(database.db, id);
         return toProductDetailDto(detail!);
       } catch (err: unknown) {
@@ -212,7 +215,6 @@ export const productsRoutes: FastifyPluginAsync<CatalogueRouteOptions> = async (
         if (ec === 'INSUFFICIENT_IMAGES' || ec === 'IMAGE_LIMIT_EXCEEDED') {
           return reply.status(400).send(errorResponse(ec, (err as Error).message, request.id));
         }
-        console.error('ERROR IN POST /products:', err);
         throw err;
       }
     },
@@ -235,6 +237,7 @@ export const productsRoutes: FastifyPluginAsync<CatalogueRouteOptions> = async (
           .status(404)
           .send(errorResponse('PRODUCT_NOT_FOUND', 'Product not found', request.id));
       await database.db.transaction((tx) => deleteProduct(tx, request.params.id));
+      bumpCatalogueRevision(request.log);
       return { success: true as const };
     },
   );

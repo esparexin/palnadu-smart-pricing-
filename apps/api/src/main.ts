@@ -18,4 +18,11 @@ const shutdown = async () => {
 process.once('SIGINT', () => void shutdown());
 process.once('SIGTERM', () => void shutdown());
 
+try {
+  await database.ping();
+  server.log.info('Database connection pool pre-warmed');
+} catch (error) {
+  server.log.warn({ err: error }, 'Database pre-warm ping failed, will connect on demand');
+}
+
 await server.listen({ host: config.host, port: config.port });

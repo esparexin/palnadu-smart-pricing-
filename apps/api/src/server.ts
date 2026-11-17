@@ -33,6 +33,7 @@ import { importExportPlugin } from './import-export/import-export.plugin.js';
 import { inventoryPlugin } from './inventory/inventory.plugin.js';
 import { whatsappPlugin } from './whatsapp/whatsapp.plugin.js';
 import { integrationsPlugin } from './integrations/integrations.plugin.js';
+import { registerPerformanceHooks } from './performance.js';
 
 export interface ApiDependencies {
   config: ServerConfig;
@@ -144,6 +145,7 @@ export async function buildServer({ config, database, storage }: ApiDependencies
 
   await app.register(cookie, { secret: config.sessionSecret, hook: 'onRequest' });
   await app.register(rateLimit, { global: false, hook: 'preHandler' });
+  await registerPerformanceHooks(app);
 
   app.setErrorHandler((error: unknown, request, reply) => {
     const validationError = isValidationError(error);

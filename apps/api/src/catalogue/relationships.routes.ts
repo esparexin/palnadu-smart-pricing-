@@ -20,6 +20,7 @@ import {
   type DatabaseClient,
 } from '@palnadu/persistence';
 import { errorResponse, requireAdminAuth, requireAdminPermission } from '../auth/auth.guards.js';
+import { bumpCatalogueRevision } from './catalogue-revision.js';
 
 export interface CatalogueRouteOptions {
   database: DatabaseClient;
@@ -112,6 +113,7 @@ export const relationshipsRoutes: FastifyPluginAsync<CatalogueRouteOptions> = as
         confirmedByAdmin,
         notes,
       });
+      bumpCatalogueRevision(request.log);
       return reply.status(201).send(toRelDto(created));
     },
   );
@@ -190,6 +192,7 @@ export const relationshipsRoutes: FastifyPluginAsync<CatalogueRouteOptions> = as
       }
 
       const updated = await updateProductRelationship(database.db, productId, id, data);
+      bumpCatalogueRevision(request.log);
       return toRelDto(updated!);
     },
   );
@@ -213,6 +216,7 @@ export const relationshipsRoutes: FastifyPluginAsync<CatalogueRouteOptions> = as
           .send(errorResponse('RELATIONSHIP_NOT_FOUND', 'Relationship not found', request.id));
 
       await deleteProductRelationship(database.db, productId, id);
+      bumpCatalogueRevision(request.log);
       return { success: true as const };
     },
   );

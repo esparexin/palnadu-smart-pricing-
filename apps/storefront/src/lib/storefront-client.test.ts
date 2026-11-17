@@ -25,9 +25,50 @@ describe('StorefrontClient', () => {
     );
   });
 
-  it('calls getProductBySlug with encoded slug', async () => {
-    await client.getProductBySlug('4mp-ptz-camera');
+  it('reuses cached products on subsequent calls and deduplicates concurrent calls', async () => {
+    const mockProducts = { items: [{ id: 'p1', name: 'Camera' }], total: 1 };
+    (mockExecutor.request as ReturnType<typeof vi.fn>).mockResolvedValue(mockProducts);
+
+    const [res1, res2] = await Promise.all([
+      client.listProducts({ limit: 12 }),
+      client.listProducts({ limit: 12 }),
+    ]);
+    expect(res1).toEqual(mockProducts);
+    expect(res2).toEqual(mockProducts);
+    expect(mockExecutor.request).toHaveBeenCalledTimes(1);
+
+    const res3 = await client.listProducts({ limit: 12 });
+    expect(res3).toEqual(mockProducts);
+    expect(mockExecutor.request).toHaveBeenCalledTimes(1);
+
+    await client.listProducts({ limit: 12, q: 'dome' });
+    expect(mockExecutor.request).toHaveBeenCalledTimes(2);
+  });
+
+  it('calls getProductBySlug with encoded slug and reuses cache', async () => {
+    const mockProduct = { id: 'p1', slug: '4mp-ptz-camera', name: '4MP PTZ Camera' };
+    (mockExecutor.request as ReturnType<typeof vi.fn>).mockResolvedValue(mockProduct);
+
+    const [res1, res2] = await Promise.all([
+      client.getProductBySlug('4mp-ptz-camera'),
+      client.getProductBySlug('4mp-ptz-camera'),
+    ]);
+    expect(res1).toEqual(mockProduct);
+    expect(res2).toEqual(mockProduct);
+    expect(mockExecutor.request).toHaveBeenCalledTimes(1);
     expect(mockExecutor.request).toHaveBeenCalledWith('/api/v1/public/products/4mp-ptz-camera');
+  });
+
+  it('clears all in-memory caches when clearCache is called', async () => {
+    const mockCategories = [{ id: '1', name: 'Cameras', slug: 'cameras', parentId: null }];
+    (mockExecutor.request as ReturnType<typeof vi.fn>).mockResolvedValue(mockCategories);
+
+    await client.listCategories();
+    expect(mockExecutor.request).toHaveBeenCalledTimes(1);
+
+    client.clearCache();
+    await client.listCategories();
+    expect(mockExecutor.request).toHaveBeenCalledTimes(2);
   });
 
   it('calls listCategories with optional search query', async () => {
@@ -39,18 +80,15 @@ describe('StorefrontClient', () => {
     const mockCategories = [{ id: '1', name: 'Cameras', slug: 'cameras', parentId: null }];
     (mockExecutor.request as ReturnType<typeof vi.fn>).mockResolvedValue(mockCategories);
 
-    // Concurrent calls should share single executor request
     const [res1, res2] = await Promise.all([client.listCategories(), client.listCategories()]);
     expect(res1).toEqual(mockCategories);
     expect(res2).toEqual(mockCategories);
     expect(mockExecutor.request).toHaveBeenCalledTimes(1);
 
-    // Sequential call within TTL should hit cache
     const res3 = await client.listCategories();
     expect(res3).toEqual(mockCategories);
     expect(mockExecutor.request).toHaveBeenCalledTimes(1);
 
-    // Different query key triggers new request
     await client.listCategories('networking');
     expect(mockExecutor.request).toHaveBeenCalledTimes(2);
   });

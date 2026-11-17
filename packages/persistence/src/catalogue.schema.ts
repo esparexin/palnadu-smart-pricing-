@@ -89,6 +89,7 @@ export const products = pgTable(
     uniqueIndex('products_normalized_slug_uq').on(sql`lower(btrim(${table.slug}))`),
     index('products_brand_id_idx').on(table.brandId),
     index('products_status_idx').on(table.status),
+    index('products_status_name_idx').on(table.status, table.name),
   ],
 );
 
@@ -153,6 +154,7 @@ export const productVariants = pgTable(
       .on(sql`lower(btrim(${table.sku}))`)
       .where(sql`${table.sku} is not null`),
     index('product_variants_product_id_idx').on(table.productId),
+    index('product_variants_model_idx').on(table.model),
   ],
 );
 

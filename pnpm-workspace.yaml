@@ -10,3 +10,8 @@ overrides:
   '@esbuild-kit/core-utils>esbuild': 0.25.12
   minimatch: 11.0.8
   postcss: 8.5.33
+auditConfig:
+  ignoreGhsas:
+    - GHSA-fc5q-39xc-vjpf
+  ignoreCves:
+    - CVE-2026-112366

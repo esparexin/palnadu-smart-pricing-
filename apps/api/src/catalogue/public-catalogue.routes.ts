@@ -20,6 +20,7 @@ import {
   type DatabaseClient,
 } from '@palnadu/persistence';
 import { errorResponse } from '../auth/auth.guards.js';
+import { getCatalogueRevision } from './catalogue-revision.js';
 import { formatBrand, formatCategory } from './catalogue.helpers.js';
 
 export interface PublicCatalogueRouteOptions {
@@ -30,7 +31,8 @@ const SlugParamSchema = z.object({ slug: SlugSchema }).strict();
 const ProductIdOrSlugParamSchema = z.object({ productId: z.string().trim().min(1) }).strict();
 const OptionalSearchQuerySchema = z.object({ q: z.string().trim().optional() }).strict();
 
-const PUBLIC_CACHE_CONTROL_HEADER = 'public, max-age=30, s-maxage=120, stale-while-revalidate=300';
+export const PUBLIC_CATALOGUE_CACHE_HEADER =
+  'public, max-age=60, s-maxage=86400, stale-while-revalidate=604800';
 
 export const publicCatalogueRoutes: FastifyPluginAsync<PublicCatalogueRouteOptions> = async (
   rawApp,
@@ -52,7 +54,8 @@ export const publicCatalogueRoutes: FastifyPluginAsync<PublicCatalogueRouteOptio
       },
     },
     async (request, reply) => {
-      reply.header('Cache-Control', PUBLIC_CACHE_CONTROL_HEADER);
+      reply.header('Cache-Control', PUBLIC_CATALOGUE_CACHE_HEADER);
+      reply.header('X-Catalogue-Revision', getCatalogueRevision());
       const result = await listPublicProducts(database.db, request.query);
       return result;
     },
@@ -78,7 +81,8 @@ export const publicCatalogueRoutes: FastifyPluginAsync<PublicCatalogueRouteOptio
           .status(404)
           .send(errorResponse('PRODUCT_NOT_FOUND', 'Product not found', request.id));
       }
-      reply.header('Cache-Control', PUBLIC_CACHE_CONTROL_HEADER);
+      reply.header('Cache-Control', PUBLIC_CATALOGUE_CACHE_HEADER);
+      reply.header('X-Catalogue-Revision', getCatalogueRevision());
       return product;
     },
   );
@@ -106,7 +110,8 @@ export const publicCatalogueRoutes: FastifyPluginAsync<PublicCatalogueRouteOptio
           .status(404)
           .send(errorResponse('PRODUCT_NOT_FOUND', 'Product not found', request.id));
       }
-      reply.header('Cache-Control', PUBLIC_CACHE_CONTROL_HEADER);
+      reply.header('Cache-Control', PUBLIC_CATALOGUE_CACHE_HEADER);
+      reply.header('X-Catalogue-Revision', getCatalogueRevision());
       return recommendations;
     },
   );
@@ -124,7 +129,8 @@ export const publicCatalogueRoutes: FastifyPluginAsync<PublicCatalogueRouteOptio
       },
     },
     async (request, reply) => {
-      reply.header('Cache-Control', PUBLIC_CACHE_CONTROL_HEADER);
+      reply.header('Cache-Control', PUBLIC_CATALOGUE_CACHE_HEADER);
+      reply.header('X-Catalogue-Revision', getCatalogueRevision());
       const items = await listPublicCategories(database.db, {
         q: request.query.q,
       });
@@ -145,7 +151,8 @@ export const publicCatalogueRoutes: FastifyPluginAsync<PublicCatalogueRouteOptio
       },
     },
     async (request, reply) => {
-      reply.header('Cache-Control', PUBLIC_CACHE_CONTROL_HEADER);
+      reply.header('Cache-Control', PUBLIC_CATALOGUE_CACHE_HEADER);
+      reply.header('X-Catalogue-Revision', getCatalogueRevision());
       const items = await listPublicBrands(database.db, {
         q: request.query.q,
       });

@@ -312,6 +312,7 @@ export default function StorefrontHomePage() {
   const [products, setProducts] = useState<PublicProductDto[]>([]);
   const [total, setTotal] = useState(0);
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -364,12 +365,15 @@ export default function StorefrontHomePage() {
       .listCategories()
       .then((cats) => {
         setCategories(cats);
-        if (cats.length === 1 && cats[0]) {
+        if (cats.length === 1 && cats[0] && !selectedCategory) {
           setSelectedCategory(cats[0].slug);
         }
       })
       .catch(() => {
         // Non-fatal
+      })
+      .finally(() => {
+        setCategoriesLoaded(true);
       });
   }, []);
 
@@ -400,8 +404,11 @@ export default function StorefrontHomePage() {
   };
 
   useEffect(() => {
+    if (!categoriesLoaded && !selectedCategory && !search && !selectedBrand) {
+      return;
+    }
     fetchProducts();
-  }, [search, selectedCategory, selectedBrand, page]);
+  }, [categoriesLoaded, search, selectedCategory, selectedBrand, page]);
 
   const availableBrands = useMemo(() => {
     const map = new Map<string, { id: string; name: string; slug: string }>();

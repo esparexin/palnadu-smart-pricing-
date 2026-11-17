@@ -35,6 +35,8 @@ describe('API foundation', () => {
 
     expect(health.statusCode).toBe(200);
     expect(health.json()).toEqual({ status: 'ok' });
+    expect(health.headers['cache-control']).toBe('private, no-cache, no-store, must-revalidate');
+    expect(health.headers['server-timing']).toMatch(/app;dur=\d+(\.\d+)?/);
     expect(readiness.statusCode).toBe(200);
     expect(readiness.json()).toEqual({ status: 'ready' });
     expect(database.ping).toHaveBeenCalledOnce();

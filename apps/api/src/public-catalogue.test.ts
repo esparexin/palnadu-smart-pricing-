@@ -251,8 +251,11 @@ describe('Public Catalogue API & Price Confidentiality', () => {
       });
       expect(resCategories.statusCode).toBe(200);
       expect(resCategories.headers['cache-control']).toBe(
-        'public, max-age=30, s-maxage=120, stale-while-revalidate=300',
+        'public, max-age=60, s-maxage=86400, stale-while-revalidate=604800',
       );
+      expect(resCategories.headers['x-catalogue-revision']).toBeDefined();
+      expect(resCategories.headers['etag']).toBeDefined();
+      expect(resCategories.headers['server-timing']).toMatch(/app;dur=\d+(\.\d+)?/);
 
       const resBrands = await server.inject({
         method: 'GET',
@@ -260,8 +263,36 @@ describe('Public Catalogue API & Price Confidentiality', () => {
       });
       expect(resBrands.statusCode).toBe(200);
       expect(resBrands.headers['cache-control']).toBe(
-        'public, max-age=30, s-maxage=120, stale-while-revalidate=300',
+        'public, max-age=60, s-maxage=86400, stale-while-revalidate=604800',
       );
+      expect(resBrands.headers['x-catalogue-revision']).toBeDefined();
+      expect(resBrands.headers['etag']).toBeDefined();
+    });
+
+    it('returns 304 Not Modified when matching If-None-Match header is provided', async () => {
+      const server = await buildServer({
+        config,
+        database: createMockDatabase(),
+      });
+      servers.push(server);
+
+      const firstRes = await server.inject({
+        method: 'GET',
+        url: '/api/v1/public/categories',
+      });
+      expect(firstRes.statusCode).toBe(200);
+      const etag = firstRes.headers['etag'];
+      expect(etag).toBeDefined();
+
+      const conditionalRes = await server.inject({
+        method: 'GET',
+        url: '/api/v1/public/categories',
+        headers: {
+          'if-none-match': etag as string,
+        },
+      });
+      expect(conditionalRes.statusCode).toBe(304);
+      expect(conditionalRes.body).toBe('');
     });
   });
 });

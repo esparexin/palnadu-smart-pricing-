@@ -165,6 +165,39 @@ pg_restore --clean --if-exists --no-owner --no-acl --verbose -d "$DATABASE_DIREC
 - **Memory Usage**: Alert when container memory utilization exceeds 85%.
 - **Database Connection Utilization**: Alert when active pool connections exceed 80% of `DB_POOL_MAX`.
 
+### 6.3 Edge Caching, Cold-Start Prevention & Observability
+
+To guarantee consistently fast public storefront performance (< 50ms) regardless of backend container dormancy:
+
+1. **Render Production Hosting Configuration**:
+   - `palnadu-api` web service must be configured with `plan: starter` (or higher) with persistent instances in the Singapore region (`singapore`).
+   - Starter and higher instances do not spin down after 15 minutes of inactivity (zero-sleep guarantee).
+   - Fastify pre-warms the database connection pool on boot before listening on the port, eliminating initial TLS 1.3 handshake latency.
+   - Artificial health pingers are strictly prohibited per engineering governance.
+
+2. **Vercel CDN Edge Caching & Stale-While-Revalidate (SWR)**:
+   - Public catalogue endpoints (`/categories`, `/brands`, `/products`, `/products/:slug`, recommendations) emit:
+     `Cache-Control: public, max-age=60, s-maxage=86400, stale-while-revalidate=604800`
+   - Vercel's global CDN caches responses for 24 hours (`s-maxage=86400`) and serves stale content instantly (< 50ms) for up to 7 days while asynchronously revalidating with Render.
+   - Fastify generates HTTP `ETag` (SHA-1 weak tag) and supports conditional `If-None-Match` requests returning `304 Not Modified` with zero payload body.
+
+3. **Strict Separation of Caching Policies**:
+   - **Public Catalogue Data**: Edge-cached with SWR for maximum speed.
+   - **Quotations & Basket**: Strictly `Cache-Control: private, no-cache, no-store, must-revalidate`.
+   - **Inventory & Stock**: Strictly `Cache-Control: private, no-cache, no-store, must-revalidate`.
+   - **Admin & Auth**: Strictly `Cache-Control: private, no-cache, no-store, must-revalidate`.
+
+4. **Cache Invalidation & On-Demand Revalidation**:
+   - Fastify maintains a monotonic `catalogueRevision` updated on all administrative mutations.
+   - Responses include `X-Catalogue-Revision: <revision>`.
+   - On-demand edge cache invalidation endpoint: `POST /api/revalidate` with `x-revalidate-secret` purges Vercel's cache tags and paths on demand.
+   - `StorefrontClient` includes in-memory deduplication and cache clearing (`clearCache()`).
+
+5. **Production Observability**:
+   - Fastify injects `Server-Timing: app;dur=...` into all responses.
+   - Inspect `x-vercel-cache: HIT | MISS | STALE` in browser devtools or Vercel Edge logs.
+   - Any request exceeding 1000ms triggers a `Slow route detected` warning log.
+
 ---
 
 ## 7. Zero-Downtime Deployment & Rollback Strategy

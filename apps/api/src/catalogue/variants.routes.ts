@@ -21,6 +21,7 @@ import {
   type DatabaseClient,
 } from '@palnadu/persistence';
 import { errorResponse, requireAdminAuth, requireAdminPermission } from '../auth/auth.guards.js';
+import { bumpCatalogueRevision } from './catalogue-revision.js';
 import { ProductIdParamSchema, toVariantDto, VariantIdParamSchema } from './catalogue.helpers.js';
 
 export interface CatalogueRouteOptions {
@@ -86,6 +87,7 @@ export const variantsRoutes: FastifyPluginAsync<CatalogueRouteOptions> = async (
       }
 
       const created = await createVariant(database.db, productId, data);
+      bumpCatalogueRevision(request.log);
       return reply.status(201).send(toVariantDto(created));
     },
   );
@@ -198,6 +200,7 @@ export const variantsRoutes: FastifyPluginAsync<CatalogueRouteOptions> = async (
       }
 
       const updated = await updateVariant(database.db, productId, id, data);
+      bumpCatalogueRevision(request.log);
       return toVariantDto(updated!);
     },
   );
@@ -221,6 +224,7 @@ export const variantsRoutes: FastifyPluginAsync<CatalogueRouteOptions> = async (
           .send(errorResponse('VARIANT_NOT_FOUND', 'Variant not found', request.id));
 
       await deleteVariant(database.db, productId, id);
+      bumpCatalogueRevision(request.log);
       return { success: true as const };
     },
   );
