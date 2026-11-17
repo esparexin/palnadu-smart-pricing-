@@ -7,7 +7,14 @@ import {
 } from '@palnadu/contracts';
 import type { DbExecutor } from './client.js';
 import { hydratePublicProducts } from './public-catalogue-hydration.js';
-import { productRelationships, products } from './schema.js';
+import {
+  brands,
+  categories,
+  productCategories,
+  productRelationships,
+  products,
+  productVariants,
+} from './schema.js';
 
 export async function findPublicProductBySlug(
   db: DbExecutor,
@@ -37,7 +44,13 @@ export async function listPublicProducts(
 
   if (q) {
     const term = `%${q.trim()}%`;
-    const searchFilter = or(ilike(products.name, term), ilike(products.slug, term));
+    const searchFilter = or(
+      ilike(products.name, term),
+      ilike(products.slug, term),
+      ilike(products.model, term),
+      sql`EXISTS (SELECT 1 FROM ${productVariants} pv WHERE pv.product_id = ${products.id} AND (pv.sku ILIKE ${term} OR pv.model ILIKE ${term}))`,
+      sql`EXISTS (SELECT 1 FROM ${brands} b WHERE b.id = ${products.brandId} AND b.name ILIKE ${term})`,
+    );
     if (searchFilter) conditions.push(searchFilter);
   }
   if (brandId) conditions.push(eq(products.brandId, brandId));
@@ -133,4 +146,51 @@ export async function listPublicRecommendations(
   }
 
   return PublicRecommendationListResponseSchema.parse(results);
+}
+
+export async function listPublicCategories(
+  db: DbExecutor,
+  params?: { q?: string },
+): Promise<Array<typeof categories.$inferSelect>> {
+  const conditions = [
+    sql`EXISTS (
+      SELECT 1 FROM ${productCategories} pc
+      INNER JOIN ${products} p ON pc.product_id = p.id
+      WHERE (pc.category_id = ${categories.id} OR pc.category_id IN (
+        SELECT sub.id FROM ${categories} sub WHERE sub.parent_id = ${categories.id}
+      ))
+      AND p.status = 'published'
+    )`,
+  ];
+  if (params?.q) {
+    const term = `%${params.q.trim()}%`;
+    conditions.push(or(ilike(categories.name, term), ilike(categories.slug, term))!);
+  }
+  return db
+    .select()
+    .from(categories)
+    .where(and(...conditions))
+    .orderBy(categories.name);
+}
+
+export async function listPublicBrands(
+  db: DbExecutor,
+  params?: { q?: string },
+): Promise<Array<typeof brands.$inferSelect>> {
+  const conditions = [
+    sql`EXISTS (
+      SELECT 1 FROM ${products} p
+      WHERE p.brand_id = ${brands.id}
+      AND p.status = 'published'
+    )`,
+  ];
+  if (params?.q) {
+    const term = `%${params.q.trim()}%`;
+    conditions.push(or(ilike(brands.name, term), ilike(brands.slug, term))!);
+  }
+  return db
+    .select()
+    .from(brands)
+    .where(and(...conditions))
+    .orderBy(brands.name);
 }

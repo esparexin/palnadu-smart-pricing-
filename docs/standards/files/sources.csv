@@ -1,0 +1,55 @@
+source_id,url,source_type,brand_id,retrieved_on,used_for
+SRC-001,https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Pro-Series-EasyIP-/ds-2cd2043g2-i-u-/,official_site,BR-HIKVISION,2026-11-17,Hikvision DS-2CD2043G2-I(U) product page (search excerpt; direct fetch blocked by bot challenge)
+SRC-002,https://www.secplan.de/media/pdf/86/a8/84/DS-2CD2043G2-IU_Datasheet_V5-5-113_20230303.pdf,datasheet_mirror,BR-HIKVISION,2026-11-17,Full datasheet read (Hikvision datasheet V5.5.113 hosted by reseller)
+SRC-003,https://www.hikvision.com/sa/products/IP-Products/Network-Cameras/Pro-Series-EasyIP-/ds-2cd2t43g2-2i-4i,official_site,BR-HIKVISION,2026-11-17,DS-2CD2T43G2-2I/4I available models (search excerpt)
+SRC-004,https://www.montersi.pl/instrukcje/DS-2CD2T43G2-2I%20-%20Karta%20katalogowa.pdf,datasheet_mirror,BR-HIKVISION,2026-11-17,DS-2CD2T43G2-2I/4I datasheet excerpt
+SRC-005,https://aacgroup.com.my/uploads/product_pdf/DS-2SP7043G2-I_Datasheet_V5.7.1_20220829.pdf,datasheet_mirror,BR-HIKVISION,2026-11-17,DS-2SP7043G2-I datasheet excerpt
+SRC-006,https://www.dahuasecurity.com/products/All-Products/Network-Cameras/WizSense-Series/2-Series/4MP/IPC-HFW2441S-S,official_site,BR-DAHUA,2026-11-17,IPC-HFW2441S-S product page (excerpts)
+SRC-007,https://www.tssgroup.cz/buxus/docs/datasheety/Dahua%20IPC-HFW2441S-S-0280B%20en%20datasheet.pdf,datasheet_mirror,BR-DAHUA,2026-11-17,IPC-HFW2441S-S datasheet excerpt incl. ordering info/accessories
+SRC-008,https://www.dahuasecurity.com/br/products/All-Products/Network-Cameras/WizSense-Series/2-Series/4MP/IPC-HFW2441S-S,official_site,BR-DAHUA,2026-11-17,IPC-HFW2441S-S lens/FOV excerpt
+SRC-009,https://www.dahuasecurity.com/ceen/products/network-products/network-cameras/wizsense-2-series/ir/ipc-hfw2441s-s,official_site,BR-DAHUA,2026-11-17,IPC-HFW2441S-S IR distance excerpt
+SRC-010,https://m.dateks.lv/ru/cenas/video-noverosanas-kameras/927164-dahua-dh-ipc-hfw2441s-s-0280b-1520p-4mp-white,distributor_page,BR-DAHUA,2026-11-17,DH-IPC-HFW2441S-S-0280B part code
+SRC-011,https://www.elkor.lv/dahua-white-outdoor-ipc-ipc-hfw2441s-s-0360b.html,distributor_page,BR-DAHUA,2026-11-17,IPC-HFW2441S-S-0360B variant
+SRC-012,https://materialfile.dahuasecurity.com/uploads/cpq/prm-os-srv-res/smart/datasheetzipfiles/IPC-HDW2441T-S_S0_datasheet_20250218.pdf,official_datasheet,BR-DAHUA,2026-11-17,IPC-HDW2441T-S datasheet excerpt incl. optional accessories
+SRC-013,https://officeserv.com.cy/?p=130807,distributor_page,BR-DAHUA,2026-11-17,DH-IPC-HFW2431S-S-S2 listing + datasheet link
+SRC-014,https://cpplusworld.com/,official_site,BR-CPPLUS,2026-11-17,Official site: category taxonomy + trending items
+SRC-015,https://cpplusworld.com/products/network-camera/4-mp,official_site,BR-CPPLUS,2026-11-17,Official 4 MP Network Camera listing
+SRC-016,https://www.cpplusworld.com/prodassets/datasheet/CP-UNC-TB41L3-MDS.pdf,official_datasheet,BR-CPPLUS,2026-11-17,CP-UNC-TB41L3-MDS datasheet excerpt
+SRC-017,https://matrixcomsec.com/?p=1663,official_site,BR-MATRIX,2026-11-17,Professional Series bullet model table
+SRC-018,https://matrixcomsec.com/?p=767,official_site,BR-MATRIX,2026-11-17,Project Series 2MP/5MP bullet page
+SRC-019,https://www.matrixcomsec.com/product-catalogue/?p=16737,official_site,BR-MATRIX,2026-11-17,SATATYA CIBR20FL36CWP / CIBR50FL40CWS catalogue entries
+SRC-020,https://www.matrixcomsec.com/products/?p=16740,official_site,BR-MATRIX,2026-11-17,SATATYA CIBR50FL28CWS entry
+SRC-021,https://www.matrixcomsec.com/products/?p=11791,official_site,BR-MATRIX,2026-11-17,Project Series dome entries CIDR20*
+SRC-022,https://www.matrixcomsec.com/products/?p=13216,official_site,BR-MATRIX,2026-11-17,SATATYA MIBR20FL36CWS entry
+SRC-023,https://www.marketing.matrixcomsec.com/?p=1663,official_site,BR-MATRIX,2026-11-17,"Professional Series table (marketing site mirror, non-P2 models)"
+SRC-024,https://www.marketing.matrixcomsec.com/wp-content/uploads/2023/07/Matrix-IPVS-SATATYA-MITR20FL28CWS-Technical-Specifications-1.pdf,official_datasheet,BR-MATRIX,2026-11-17,MITR20FL28CWS datasheet (title only read)
+SRC-025,https://matrixcomsec.com/wp-content/uploads/2023/11/Matrix-IPVS-SATATYA-CIBR20VL12CWS-Technical-Specifications-up.pdf,official_datasheet,BR-MATRIX,2026-11-17,CIBR20VL12CWS datasheet (title only read)
+SRC-026,https://www.marketing.matrixcomsec.com/wp-content/uploads/2023/11/Matrix-IPVS-SATATYA-CIBR20FL28CWP-Technical-Specifications-up.pdf,official_datasheet,BR-MATRIX,2026-11-17,CIBR20FL28CWP datasheet (title only read)
+SRC-027,https://www.axis.com/en-in/products/axis-p1465-le,official_site,BR-AXIS,2026-11-17,AXIS P1465-LE product page (India); accessory listings in regional pages
+SRC-028,https://axis.com/dam/public/54/91/2c/datasheet-axis-p1465-le-bullet-camera-de-DE-474931.pdf,official_datasheet,BR-AXIS,2026-11-17,Official datasheet (German edition) excerpt
+SRC-029,https://shop.allnet.de/media/pdf/09/d8/f4/213183.pdf,datasheet_mirror,BR-AXIS,2026-11-17,"Datasheet English edition: models, lens, accessories"
+SRC-030,https://www.use-ip.co.uk/datasheets/10408/axis_p1465le_2mp_bullet_camera_29mm_02340001.pdf,datasheet_mirror,BR-AXIS,2026-11-17,"29 mm model datasheet: FOV, range, approvals"
+SRC-031,https://www.use-ip.co.uk/datasheets/10407/axis_p1465le_2mp_bullet_camera_9mm_02339001.pdf,datasheet_mirror,BR-AXIS,2026-11-17,"9 mm model datasheet: illumination, codecs, ONVIF"
+SRC-032,https://www.aloinfousa.com/products/axis-p1465-le-29-mm-bullet-camera-02340-001,distributor_page,BR-AXIS,2026-11-17,Optional accessories list; PoE class
+SRC-033,https://www.axis.com/en-be/products/axis-p1465-le,official_site,BR-AXIS,2026-11-17,"Recommended accessories (cards, cabinet, illuminators)"
+SRC-034,https://www.axis.com/en-au/products/axis-p1465-le,official_site,BR-AXIS,2026-11-17,"Operating temp, IP/IK, power, accessories (cables, PoE extender)"
+SRC-035,https://blog.business.moglix.com/?p=25638,secondary_article,,2026-11-17,Brand discovery
+SRC-036,https://www.industrybuying.com/articles/best-cctv-camera-brands-in-india,secondary_article,,2026-11-17,Brand discovery
+SRC-037,https://cctvdesk.com/?p=11534,secondary_article,,2026-11-17,Brand discovery
+SRC-038,https://www.slideshare.net/slideshow/top-10-best-cctv-camera-manufacturers-in-india/273456971,secondary_article,,2026-11-17,Brand discovery
+SRC-039,https://m.indiamart.com/impcat/zicom-cctv-camera.html,distributor_page,,2026-11-17,Brand discovery
+SRC-040,https://storyboard18.com/amp/brand-marketing/india-tightens-cctv-rules-pushes-out-chinese-firms-boosts-local-production-94058.htm,secondary_article,,2026-11-17,Brand discovery
+SRC-041,https://knowledgebase.bison.co.in/view_article.php?id=439,secondary_article,,2026-11-17,Brand discovery
+SRC-042,https://icseecam.com/top-10-cctv-camera-manufacturers-in-india,secondary_article,,2026-11-17,Brand discovery
+SRC-043,https://www.indiamart.com/ansari-tech-solutions/cctv-camera.html,distributor_page,,2026-11-17,Brand discovery
+SRC-044,https://www.tribuneindia.com/news/business/chennai-based-cctv-and-ai-surveillance-solutions-brand-hifocus-crosses-70-bis-er-security-registered-cctv-camera-models/,secondary_article,,2026-11-17,Brand discovery
+SRC-045,https://www.scribd.com/document/879940353/Camera,secondary_article,,2026-11-17,Brand discovery
+SRC-046,https://support.reolink.com/hc/en-us/articles/360008718893-The-brief-introduction-of-onvif-,official_site,,2026-11-17,Brand discovery
+SRC-047,https://i-pro.com/products_and_solutions/en/node/9456,official_site,,2026-11-17,Brand discovery
+SRC-048,https://www.pelco.com/partners/technical-partners/pelco-camera-integrations/onvif,official_site,,2026-11-17,Brand discovery
+SRC-049,https://community.boschsecurity.com/t5/Security-Video/BVMS-ONVIF-Device-compatibility/ta-p/4252,official_site,,2026-11-17,Brand discovery
+SRC-050,https://www.westerndigital.com/en-ua/products/internal-drives/wd-purple-sata-hdd?sku=WD43PURZ,official_site,BR-WD,2026-11-17,WD Purple 4TB specs
+SRC-051,https://www.westerndigital.com/en-ae/products/internal-drives/wd-purple-sata-hdd?sku=WD43PURZ,official_site,BR-WD,2026-11-17,WD Purple additional models list
+SRC-052,https://www.westerndigital.com/en-gb/products/internal-drives/wd-purple-sata-hdd?sku=WD43PURZ,official_site,BR-WD,2026-11-17,WD Purple capacity/cache variant map
+SRC-053,https://www.westerndigital.com/en-ie/products/internal-drives/wd-purple-sata-hdd,official_site,BR-WD,2026-11-17,WD Purple 64MB-cache model specs
+SRC-054,https://www.dahuasecurity.com/asset/upload/uploads/cpq/DH-IPC-HFW2431S-S-S2_datasheet_20201204.pdf,official_datasheet,BR-DAHUA,2026-11-17,"DH-IPC-HFW2431S-S-S2 datasheet link (seen, not read)"

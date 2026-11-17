@@ -1,14 +1,18 @@
-import { count, inArray, sql } from 'drizzle-orm';
 import {
   PRODUCT_IMAGE_LIMITS,
   ProductImportRowInputSchema,
+  resolveCanonicalBrand,
   type ImportMode,
   type ImportRowError,
 } from '@palnadu/contracts';
 import type { DbExecutor } from './client.js';
 import { parseCsv } from './csv.js';
-import { createImportBatch, insertImportRows } from './catalogue-import-export.js';
-import { productImages, productVariants } from './schema.js';
+import {
+  createImportBatch,
+  fetchExistingImageCounts,
+  fetchExistingSkuMap,
+  insertImportRows,
+} from './catalogue-import-export.js';
 import { normalizeRow } from './import-template.js';
 
 function validateRowItem(
@@ -87,46 +91,18 @@ function validateRowItem(
     }
   }
 
+  if (norm.brandName && typeof norm.brandName === 'string') {
+    const brandRes = resolveCanonicalBrand(norm.brandName);
+    if (brandRes.status === 'ambiguous') {
+      rowErrors.push({
+        rowNumber: rowNum,
+        field: 'brandName',
+        reason: `Ambiguous brand '${norm.brandName}'. ${brandRes.reason}`,
+      });
+    }
+  }
+
   return rowErrors;
-}
-
-async function fetchExistingSkuMap(
-  db: DbExecutor,
-  skus: string[],
-): Promise<Map<string, { id: string; productId: string }>> {
-  const map = new Map<string, { id: string; productId: string }>();
-  if (skus.length === 0) return map;
-
-  const found = await db
-    .select({
-      id: productVariants.id,
-      productId: productVariants.productId,
-      sku: sql<string>`lower(btrim(${productVariants.sku}))`,
-    })
-    .from(productVariants)
-    .where(inArray(sql`lower(btrim(${productVariants.sku}))`, skus));
-
-  for (const v of found) {
-    if (v.sku) map.set(v.sku, { id: v.id, productId: v.productId });
-  }
-  return map;
-}
-
-async function fetchExistingImageCounts(
-  db: DbExecutor,
-  productIds: string[],
-): Promise<Map<string, number>> {
-  const map = new Map<string, number>();
-  if (productIds.length === 0) return map;
-  const rows = await db
-    .select({ productId: productImages.productId, count: count() })
-    .from(productImages)
-    .where(inArray(productImages.productId, productIds))
-    .groupBy(productImages.productId);
-  for (const r of rows) {
-    map.set(r.productId, Number(r.count));
-  }
-  return map;
 }
 
 export async function validateAndPreviewImport(

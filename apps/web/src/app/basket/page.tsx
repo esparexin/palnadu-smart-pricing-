@@ -77,6 +77,7 @@ export default function BasketPage() {
           <BasketSuccessView
             referenceNumber={submittedResult.referenceNumber}
             createdAt={submittedResult.createdAt}
+            deliveryStatus={submittedResult.deliveryStatus}
             onNewEnquiry={() => {
               setSubmittedResult(null);
               setSubmissionIdempotencyKey(null);

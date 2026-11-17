@@ -1,0 +1,34 @@
+brand_id,brand_name,catalog_status,products_total,products_verified_datasheet,products_verified_listing,products_partial_snippet,accessories_total,links_total,next_action
+BR-HIKVISION,Hikvision,products_verified,18,8,7,3,1,2,"Crawl Hikvision India/global catalogue (Pro, Value, ColorVu, DarkFighter, PTZ, Thermal, NVR/DVR/XVR, VDP, access control, accessories)"
+BR-DAHUA,Dahua,products_verified,5,1,2,2,10,11,"Crawl Dahua catalogue (WizSense, HDCVI, PTZ, Thermal, NVR/XVR, VTO, accessories PF*)"
+BR-CPPLUS,CP Plus,products_verified,16,0,15,1,4,0,"Crawl remaining CP Plus category pages (2/5/6/8MP, NVR, DVR, PTZ, EzyHome, VDP, accessories); fetch each model page/datasheet"
+BR-MATRIX,Matrix Comsec,products_verified,23,0,23,0,0,0,"Crawl full SATATYA catalogue (NVR, PTZ, dome, turret, fisheye, VDP, access control)"
+BR-AXIS,Axis Communications,products_verified,3,3,0,0,14,14,"Crawl Axis product selector (bullet, dome, PTZ, panoramic, thermal, radar, door stations, accessories)"
+BR-ZICOM,Zicom,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-GODREJ,Godrej Security Solutions,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-SPARSH,Sparsh Securitech,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-SECUREYE,Secureye,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-TRUEVIEW,Trueview,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-HIFOCUS,HiFocus (Hi-Focus),brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-QUBO,Qubo,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-PRAMA,Prama,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-SECURUS,Securus CCTV,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-EZVIZ,EZVIZ,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-UNV,Uniview (UNV),brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-HONEYWELL,Honeywell,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-BOSCH,Bosch Security,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-PANASONIC,Panasonic,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-IPRO,i-PRO,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-SONY,Sony,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-SAMSUNG,Samsung,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-TPLINK,TP-Link,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-DLINK,D-Link,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-XIAOMI,Xiaomi (Mi),brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-VIVOTEK,Vivotek,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-PELCO,Pelco,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-AVIGILON,Avigilon,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-FLIR,FLIR,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-EAGLEEYE,Eagle Eye Networks,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-REOLINK,Reolink,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-XPIA,XPIA-i,brand_only,0,0,0,0,0,0,Crawl official catalogue; no product data verified yet
+BR-WD,Western Digital,products_verified,0,0,0,0,10,0,"Add remaining WD Purple capacities (8TB+), WD Purple Pro, Seagate SkyHawk, Toshiba S300; link to recorder HDD-compat lists (e.g. CP Plus /hddcompatibility)"

@@ -178,4 +178,39 @@ describe('import-export service', () => {
     const dft9Error = preview.errors.find((e) => e.rowNumber === 5);
     expect(dft9Error?.reason).toContain('Product cannot have more than 8 images');
   });
+
+  it('detects ambiguous brands and allows canonical brands during import preview', async () => {
+    const csvContent = [
+      'sku,name,brand_name,status',
+      'SKU-AMB,Ambiguous Product,Panasonic / i-PRO,draft',
+      'SKU-CANON,Valid Product,Axis Communications,draft',
+      'SKU-ALIAS,Alias Product,UNV,draft',
+    ].join('\n');
+
+    const fakeDb = {
+      select: vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
+        }),
+      }),
+      insert: vi.fn().mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([{ id: 'mock-batch-brands' }]),
+        }),
+      }),
+    } as unknown as DbExecutor;
+
+    const preview = await validateAndPreviewImport(fakeDb, {
+      csvContent,
+      mode: 'create_only',
+    });
+
+    expect(preview.totalRows).toBe(3);
+    expect(preview.validRows).toBe(2);
+    expect(preview.invalidRows).toBe(1);
+
+    const ambError = preview.errors.find((e) => e.rowNumber === 2);
+    expect(ambError?.field).toBe('brandName');
+    expect(ambError?.reason).toContain('Ambiguous brand');
+  });
 });

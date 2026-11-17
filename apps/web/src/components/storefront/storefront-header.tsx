@@ -1,12 +1,39 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useBasket } from '../../context/basket-context';
 
 export function StorefrontHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { itemCount, isMounted } = useBasket();
+  const router = useRouter();
+
+  // Prevent background page from scrolling when mobile navigation drawer is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+    return undefined;
+  }, [mobileMenuOpen]);
+
+  const handleSearchClick = () => {
+    if (mobileMenuOpen) {
+      setMobileMenuOpen(false);
+    }
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname === '/') {
+        window.dispatchEvent(new CustomEvent('toggle-mobile-search'));
+      } else {
+        router.push('/?focus=search');
+      }
+    }
+  };
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -63,10 +90,11 @@ export function StorefrontHeader() {
 
         {/* Mobile Action Controls */}
         <div className="flex items-center gap-2 md:hidden">
-          <Link
-            href="/basket"
-            aria-label="Quote Basket"
-            className="relative inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-slate-200 bg-white p-2 text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          <button
+            type="button"
+            onClick={handleSearchClick}
+            aria-label="Search Catalogue"
+            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-slate-200 bg-white p-2 text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <svg
               className="h-5 w-5 text-slate-700"
@@ -77,16 +105,11 @@ export function StorefrontHeader() {
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={1.75}
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
             </svg>
-            {isMounted && itemCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-blue-600 px-1 text-xs font-bold text-white shadow">
-                {itemCount}
-              </span>
-            )}
-          </Link>
+          </button>
 
           <button
             type="button"
@@ -116,9 +139,18 @@ export function StorefrontHeader() {
         </div>
       </div>
 
+      {/* Mobile backdrop overlay: dims screen & prevents interaction */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 top-[61px] bg-slate-900/40 backdrop-blur-sm z-20 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Mobile dropdown */}
       {mobileMenuOpen && (
-        <div className="border-b border-slate-200 bg-white px-4 py-3 md:hidden">
+        <div className="relative z-30 border-b border-slate-200 bg-white px-4 py-3 md:hidden shadow-lg">
           <div className="flex flex-col gap-2">
             <Link
               href="/"

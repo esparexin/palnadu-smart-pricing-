@@ -6,12 +6,14 @@ import Link from 'next/link';
 export interface BasketSuccessViewProps {
   referenceNumber: string;
   createdAt: string;
+  deliveryStatus?: string;
   onNewEnquiry: () => void;
 }
 
 export function BasketSuccessView({
   referenceNumber,
   createdAt,
+  deliveryStatus,
   onNewEnquiry,
 }: BasketSuccessViewProps) {
   const formattedDate = new Date(createdAt).toLocaleString();
@@ -43,6 +45,20 @@ export function BasketSuccessView({
           Logged at: <span className="font-medium text-slate-700">{formattedDate}</span>
         </div>
       </div>
+
+      {deliveryStatus === 'failed' && (
+        <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-left text-xs text-amber-800">
+          <div className="font-bold uppercase tracking-wider text-amber-900 mb-1">
+            Delivery Notice
+          </div>
+          <p className="leading-relaxed">
+            Automated messaging could not be dispatched at this time. However, your quotation
+            enquiry is safely registered under reference{' '}
+            <strong className="font-mono text-amber-950">{referenceNumber}</strong>, and our
+            commercial desk will follow up with your quotation estimate directly.
+          </p>
+        </div>
+      )}
 
       {/* Next Steps */}
       <div className="mt-6 space-y-3 rounded-xl border border-blue-100 bg-blue-50/50 p-5 text-left text-xs text-slate-700">

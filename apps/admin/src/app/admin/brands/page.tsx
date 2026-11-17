@@ -7,6 +7,7 @@ import { EmptyState } from '../../../components/empty-state';
 import { ErrorState } from '../../../components/error-state';
 import { LoadingState } from '../../../components/loading-state';
 import { BrandModal } from '../../../components/catalogue/brand-modal';
+import { BrandLogo } from '../../../components/catalogue/brand-logo';
 
 export default function BrandsPage() {
   const [brands, setBrands] = useState<BrandResponse[]>([]);
@@ -116,6 +117,9 @@ export default function BrandsPage() {
               <thead className="border-b border-slate-200 bg-slate-50 font-semibold text-xs text-slate-600">
                 <tr>
                   <th scope="col" className="px-6 py-3.5">
+                    Logo
+                  </th>
+                  <th scope="col" className="px-6 py-3.5">
                     Brand Name
                   </th>
                   <th scope="col" className="px-6 py-3.5">
@@ -132,6 +136,16 @@ export default function BrandsPage() {
               <tbody className="divide-y divide-slate-100">
                 {brands.map((b) => (
                   <tr key={b.id} className="hover:bg-slate-50/70">
+                    <td className="px-6 py-3">
+                      <div className="flex h-8 w-24 items-center justify-center rounded border border-slate-100 bg-slate-50/50 p-1">
+                        <BrandLogo
+                          slug={b.slug}
+                          name={b.name}
+                          className="h-6 w-auto max-w-[80px] object-contain"
+                          fallbackClassName="text-[10px] font-semibold text-slate-400"
+                        />
+                      </div>
+                    </td>
                     <td className="px-6 py-4 font-semibold text-slate-900">{b.name}</td>
                     <td className="px-6 py-4 font-mono text-xs text-slate-500">{b.slug}</td>
                     <td className="px-6 py-4 text-xs text-slate-500">

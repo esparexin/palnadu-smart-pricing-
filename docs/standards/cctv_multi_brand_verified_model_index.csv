@@ -1,0 +1,200 @@
+﻿brand,category,model_number
+Hanwha Vision,network dome camera,QNV-6012R
+Hanwha Vision,network bullet camera,QNO-7082R
+Hanwha Vision,AI IR PTZ camera,XNP-C7310R
+Hanwha Vision,analog camera,HCF-8011RV
+Hanwha Vision,analog camera,ACV-8081R
+Hanwha Vision,analog camera,ACV-8080R
+Hanwha Vision,analog camera,HCF-8010V
+Panasonic/i-PRO,network dome camera,WV-S25500-V3L
+Panasonic/i-PRO,indoor PTZ network camera,WV-S61301-Z2
+Panasonic/i-PRO,outdoor dome network camera,WV-S2536LA
+Panasonic/i-PRO,outdoor bullet network camera,WV-S15500-V3L
+Panasonic/i-PRO,network video recorder,WJ-NU301KG
+Sony,4K network camera,SNC-VM772R
+Sony,4K network camera,SNC-VB770
+Sony,V series network camera,SNC-VB642D
+Sony,V series network camera,SNC-VB632D
+Sony,V series network camera,SNC-VB640
+Sony,V series network camera,SNC-VB635
+Sony,E series network camera,SNC-EB642R
+Sony,E series network camera,SNC-EB632R
+Sony,network camera,SNC-XM631
+Sony,network camera,SNC-HMX70
+Vivotek,outdoor PTZ camera,SD9367-EHL
+Vivotek,outdoor bullet AI camera,IB9367-EHT-V2
+Vivotek,outdoor dome AI camera,FD9367-EHTV-V2
+Vivotek,dual light AI turret camera,IT9383-HVW
+EZVIZ,camera,CS-BC2 (A0-2C2WPFB)
+EZVIZ,camera,CS-CV310-A0-1C2WFR
+EZVIZ,camera,CS-CV206-E0-1D1WF
+EZVIZ,camera,CS-H6c-R101-1G2WF
+EZVIZ,camera,CS-HB8 (4MP)
+EZVIZ,camera,CS-H9c-R100-8H33WKFL
+TP-Link VIGI,camera,VIGI C330I
+TP-Link VIGI,camera,VIGI C220I
+TP-Link Tapo,camera,Tapo C200
+TP-Link Tapo,camera,Tapo C210
+TP-Link Tapo,camera,Tapo C220
+Reolink,camera system,RLK16-1200D8-A
+Reolink,camera system,RLK8-1200V4
+Reolink,camera system,RLK8-811B4-A
+Reolink,camera system,RLK16-811B8-A
+Hikvision,IP camera,DS-2CD2126G2-IMS
+Hikvision,IP camera,DS-2CD2186G2-IMS
+Hikvision,IP camera,DS-2CD23166G3-I(2U)Y
+Hikvision,IP camera,DS-2CD2345FWD-I
+Hikvision,IP camera,DS-2CD2085G1-I
+CP PLUS,IP camera,CP-UNC-DA21L3C-LQ2
+CP PLUS,IP camera,CP-UNC-TA21L3C-Q2
+CP PLUS,IP camera,CP-UNC-DA21L3C-Q2
+CP PLUS,IP camera,CP-UNC-TA21L3C-Q
+CP PLUS,IP camera,CP-UNC-TA21L6C-Q
+CP PLUS,DVR,CP-UVR-0401F1V-I
+CP PLUS,NVR,CP-UNR-4K2041-V4
+CP PLUS,NVR,CP-UNR-4K2041-4PG
+CP PLUS,NVR,CP-UNR-104F1
+CP PLUS,IP camera,CP-UNC-WE21L3C-MDS-Q
+CP PLUS,IP camera,CP-UNC-TE21ZL6C-VMDS-Q
+CP PLUS,IP camera,CP-UNC-VE21ZL4C-VMDS-Q
+Dahua,network camera,IPC-HDW3849H-AS-PV-PRO
+Dahua,network camera,IPC-HFW5859Z-ZHE-PV-PRO
+Dahua,network camera,IPC-HFW7459Z1-Z-PV-X
+Dahua,panoramic network camera,IPC-PFW83242-A180-S2
+Dahua,anti-corrosion network camera,IPC-HDW3849H-AS-PV-PRO-ATC
+Dahua,anti-corrosion network camera,IPC-HFW5859Z-ZHE-PV-PRO-ATC
+Dahua,anti-corrosion network camera,IPC-HDBW7859Z-Z-PV-X-ATC
+Dahua,network camera,IPC-HFW2449TL-S-PROX
+Dahua,network camera,IPC-HDW2449TH-S-PROX
+Dahua,network camera,IPC-HFW3849T1-AS-PV-PRO
+Dahua,network camera,IPC-HDW2441T-S
+Dahua,network camera,DH-IPC-HFW2831T-AS-S2
+Uniview/UNV,bullet,IPC2318LE-ADF28KM-WP2
+Uniview/UNV,dome,IPC3528LE-ADF28K-WP2
+Uniview/UNV,turret,IPC3628LE-ADF28K-WP2
+Uniview/UNV,network video recorder,NVR302-16B-P16-IQ
+Uniview/UNV,network video recorder,NVR301-S3-P Series
+Axis,network camera,AXIS P3268-SLVE
+Axis,network camera,AXIS P3275-LV
+Axis,network camera,AXIS P3275-LVE
+Axis,network camera,AXIS P3275-V
+Axis,network camera,AXIS P3277-LV
+Axis,network camera,AXIS P3277-LVE
+Axis,network camera,AXIS P3278-LV
+Axis,network camera,AXIS P3278-LVE
+Axis,network camera,AXIS P3285-LV
+Axis,network camera,AXIS P3285-LVE
+Axis,PTZ/panoramic network camera,AXIS Q6020-E
+Axis,PTZ/panoramic network camera,AXIS Q6086-E
+Axis,PTZ/panoramic network camera,AXIS Q6088-E
+Bosch,network camera,NDE-8702-RX
+Bosch,network camera,NDE-8702-RXL
+Bosch,network camera,NDE-8703-R
+Bosch,network camera,NDE-8703-RL
+Bosch,network camera,NDE-8703-RX
+Bosch,network camera,NDE-3702-AL
+Bosch,network camera,NDV-8502-R
+Honeywell,network video recorder,HN35 Plus
+Honeywell,network camera,35 Series IP Camera
+Secureye,IP camera,SG-C2B-F2A-DL
+Secureye,IP camera,SG-C2D-F2A-DL
+Secureye,IP camera,SP-C2UN
+Secureye,IP camera,SP-C2XN-I3
+Secureye,IP camera,SP-C2QN-I5W
+Secureye,IP camera,SP-H24S-23X
+Hi-Focus,IP camera,HIPC-T4215-RDLKZ-I2
+Hi-Focus,IP camera,HIPC-T4402E-DL-I3
+Hi-Focus,IP camera,HIPC-D3004E-RDL-I3
+Hi-Focus,IP camera,HIPC-D3512-KVDL-I2
+Hi-Focus,IP camera,HIPC-D3315-DLS-I2
+Godrej,smart camera,Eve Pro 3 Pan Tilt Smart WiFi Security Camera With 350 Degree
+Godrej,smart camera,Eve pro Wi-Fi Mini PT Camera
+Godrej,smart camera,Eve Pro 4G Bullet
+Godrej,smart camera,Eve Pro 4G Mini-PT
+Sparsh,PTZ camera,SS-EN412P-I
+Bosch Security,network camera,NDE-8702-RX-H
+Bosch Security,network camera,NDE-8702-RXL-H
+Bosch Security,network camera,NDE-8702-RXT
+Bosch Security,network camera,NDE-8702-RXT-H
+Bosch Security,network camera,NDE-8703-R-H
+Bosch Security,network camera,NDE-8703-RL-H
+Bosch Security,network camera,NDE-8703-RT
+Bosch Security,network camera,NDE-8703-RT-H
+Bosch Security,network camera,NDE-8703-RX-H
+Bosch Security,network camera,NDE-8703-RXL
+Bosch Security,network camera,NDE-8703-RXL-H
+Bosch Security,network camera,NDE-8703-RXT
+Bosch Security,network camera,NDE-8703-RXT-H
+Bosch Security,network camera,NDE-8704-R
+Bosch Security,network camera,NDE-8704-R-H
+Bosch Security,network camera,NDE-8704-RL
+Bosch Security,network camera,NDE-8704-RL-H
+Bosch Security,network camera,NDE-8704-RT
+Bosch Security,network camera,NDE-8704-RT-H
+Bosch Security,network camera,NDE-8704-RX
+Bosch Security,network camera,NDE-8704-RX-H
+Bosch Security,network camera,NDE-8704-RXL
+Bosch Security,network camera,NDE-8704-RXL-H
+Bosch Security,network camera,NDE-5702-A
+Bosch Security,network camera,NDE-5702-AL
+Bosch Security,network camera,NDE-5703-A
+Bosch Security,network camera,NDE-5703-AL
+Bosch Security,network camera,NDE-5704-A
+Bosch Security,network camera,NDE-5704-AL
+Bosch Security,network camera,NDE-3703-AL
+Bosch Security,network camera,NUE-3702-F02
+Bosch Security,network camera,NUE-3702-F04
+Bosch Security,network camera,NUE-3702-F06
+Bosch Security,network camera,NUE-3703-F02
+Bosch Security,network camera,NUE-3703-F04
+Bosch Security,network camera,NUE-3703-F06
+Bosch Security,network camera,NDE-3703-AL-IO
+Bosch Security,network camera,NBE-3702-AL
+Bosch Security,network camera,NBE-3703-AL
+Bosch Security,network camera,NBE-5702-AL
+Bosch Security,network camera,NBE-5703-AL
+Bosch Security,network camera,NBE-5704-AL
+Bosch Security,network camera,NBE-7702-ALX
+Bosch Security,network camera,NBE-7702-ALXT
+Bosch Security,network camera,NBE-7703-ALX
+Bosch Security,network camera,NBE-7703-ALXT
+Bosch Security,network camera,NBE-7704-AL
+Bosch Security,network camera,NBN-80122-CA
+Bosch Security,network camera,NBN-63013-B
+Bosch Security,network camera,NBN-63023-B
+Bosch Security,network camera,NBN-73013-BA
+Bosch Security,network camera,NBN-73023-BA
+Bosch Security,network camera,NBN-80052-BA
+Bosch Security,network camera,NDP-5522-Z30
+Bosch Security,network camera,NDP-5522-Z30C
+Bosch Security,network camera,NDP-5522-Z30L
+Bosch Security,network camera,NDP-5533-Z30L
+Bosch Security,network camera,NDP-7512-Z30
+Bosch Security,network camera,NDP-7512-Z30C
+Bosch Security,network camera,NDP-7512-Z30CT
+Bosch Security,network camera,NDP-7512-Z30K
+Bosch Security,network camera,NDP-7602-Z40
+Bosch Security,network camera,NDP-7602-Z40L
+Bosch Security,network camera,NDP-7604-Z12L
+Bosch Security,network camera,NDP-7802-Z40
+Bosch Security,network camera,NDP-7802-Z40L
+Bosch Security,network camera,NDP-7803S-Z30
+Bosch Security,network camera,NDP-7803S-Z30L
+Bosch Security,network camera,NDP-7804-Z12L
+IMOU,PoE NVR,N110-4P
+IMOU,PoE NVR,N118-8P
+IMOU,PoE switch,SF106P
+IMOU,network bullet camera,Bullet 3 Pro
+IMOU,Wi-Fi indoor camera,Ranger 2C Pro 4K
+IMOU,Wi-Fi NVR,N110W
+IMOU,Wi-Fi NVR,N118W
+Tiandy,PTZ camera,TC-H356S
+Tiandy,PTZ camera,TC-H324S
+Tiandy,PTZ camera,TC-H354S
+Tiandy,PTZ camera,TC-H356V
+Tiandy,PTZ camera,TC-H366V
+Tiandy,PTZ camera,TC-H358M
+Tiandy,PTZ camera,TC-A35555
+Tiandy,PTZ camera,TC-H3169M
+Tiandy,PTZ camera,TC-H388M
+Tiandy,PTZ camera,TC-H348M

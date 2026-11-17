@@ -16,11 +16,18 @@ const config = parseServerConfig({
 });
 
 function createMockDatabase(overrides: Partial<DatabaseClient> = {}): DatabaseClient {
+  const queryBuilder = {
+    from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    offset: vi.fn().mockReturnThis(),
+    orderBy: vi.fn().mockResolvedValue([]),
+  };
   return {
     close: vi.fn(),
     ping: vi.fn().mockResolvedValue(undefined),
     db: {
-      select: vi.fn(),
+      select: vi.fn().mockReturnValue(queryBuilder),
       execute: vi.fn(),
     } as unknown as DatabaseClient['db'],
     ...overrides,
@@ -227,6 +234,34 @@ describe('Public Catalogue API & Price Confidentiality', () => {
       expect(valid.limit).toBe(25);
       expect(valid.offset).toBe(10);
       expect(valid.brandSlug).toBe('hikvision');
+    });
+  });
+
+  describe('Edge Caching & Performance', () => {
+    it('returns public Cache-Control headers on categories and brands endpoints', async () => {
+      const server = await buildServer({
+        config,
+        database: createMockDatabase(),
+      });
+      servers.push(server);
+
+      const resCategories = await server.inject({
+        method: 'GET',
+        url: '/api/v1/public/categories',
+      });
+      expect(resCategories.statusCode).toBe(200);
+      expect(resCategories.headers['cache-control']).toBe(
+        'public, max-age=30, s-maxage=120, stale-while-revalidate=300',
+      );
+
+      const resBrands = await server.inject({
+        method: 'GET',
+        url: '/api/v1/public/brands',
+      });
+      expect(resBrands.statusCode).toBe(200);
+      expect(resBrands.headers['cache-control']).toBe(
+        'public, max-age=30, s-maxage=120, stale-while-revalidate=300',
+      );
     });
   });
 });

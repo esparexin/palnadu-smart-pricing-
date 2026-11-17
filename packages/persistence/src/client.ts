@@ -18,7 +18,7 @@ export function createDatabase(config: ServerConfig) {
 
   const client = postgres(config.databaseUrl, {
     connect_timeout: 10,
-    idle_timeout: 20,
+    idle_timeout: 60,
     max: config.databasePoolMax,
     ssl,
   });

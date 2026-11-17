@@ -16,6 +16,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
+    "seed:brands": "node --env-file-if-exists=.env node_modules/.bin/tsx scripts/seed-brands.ts",
     "test": "pnpm build && node --env-file-if-exists=.env node_modules/vitest/vitest.mjs run",
     "test:unit": "pnpm build && node --env-file-if-exists=.env node_modules/vitest/vitest.mjs run --exclude '**/*.db.test.ts'",
     "typecheck": "pnpm build && tsc --noEmit -p tsconfig.json && pnpm --filter @palnadu/web typecheck && pnpm --filter @palnadu/storefront typecheck && pnpm --filter @palnadu/admin typecheck"
