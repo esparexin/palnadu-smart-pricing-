@@ -78,11 +78,19 @@ export const productsRoutes: FastifyPluginAsync<CatalogueRouteOptions> = async (
           .send(errorResponse('DUPLICATE_PRODUCT', 'Product slug already exists', request.id));
       }
 
-      const created = await database.db.transaction((tx) =>
-        createProduct(tx, { ...data, brandId, categoryIds }),
-      );
-      const detail = await fetchProductDetail(database.db, created.id);
-      return reply.status(201).send(toProductDetailDto(detail!));
+      try {
+        const created = await database.db.transaction((tx) =>
+          createProduct(tx, { ...data, brandId, categoryIds }),
+        );
+        const detail = await fetchProductDetail(database.db, created.id);
+        return reply.status(201).send(toProductDetailDto(detail!));
+      } catch (err: unknown) {
+        const ec = (err as { code?: string; message?: string }).code;
+        if (ec === 'INSUFFICIENT_IMAGES' || ec === 'IMAGE_LIMIT_EXCEEDED') {
+          return reply.status(400).send(errorResponse(ec, (err as Error).message, request.id));
+        }
+        throw err;
+      }
     },
   );
 
@@ -193,11 +201,20 @@ export const productsRoutes: FastifyPluginAsync<CatalogueRouteOptions> = async (
           .send(errorResponse('INVALID_PRICING', 'Offer price cannot exceed MRP', request.id));
       }
 
-      await database.db.transaction((tx) =>
-        updateProduct(tx, id, { ...data, brandId, categoryIds, slug }),
-      );
-      const detail = await fetchProductDetail(database.db, id);
-      return toProductDetailDto(detail!);
+      try {
+        await database.db.transaction((tx) =>
+          updateProduct(tx, id, { ...data, brandId, categoryIds, slug }),
+        );
+        const detail = await fetchProductDetail(database.db, id);
+        return toProductDetailDto(detail!);
+      } catch (err: unknown) {
+        const ec = (err as { code?: string; message?: string }).code;
+        if (ec === 'INSUFFICIENT_IMAGES' || ec === 'IMAGE_LIMIT_EXCEEDED') {
+          return reply.status(400).send(errorResponse(ec, (err as Error).message, request.id));
+        }
+        console.error('ERROR IN POST /products:', err);
+        throw err;
+      }
     },
   );
 

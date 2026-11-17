@@ -1,8 +1,9 @@
 import { and, count, eq, ilike, or, sql } from 'drizzle-orm';
+import { PRODUCT_IMAGE_LIMITS } from '@palnadu/contracts';
 import type { DbExecutor } from './client.js';
+import { findBrandById } from './catalogue-brands.js';
 import { getProductEffectivePricing } from './pricing.js';
 import {
-  brands,
   categories,
   productCategories,
   productImages,
@@ -47,8 +48,31 @@ export interface ProductInputPayload {
   images?: ProductImageItemInput[];
 }
 
+function validateImageCount(count: number, isPublished: boolean) {
+  if (isPublished) {
+    if (
+      count < PRODUCT_IMAGE_LIMITS.MIN_FOR_PUBLISHED ||
+      count > PRODUCT_IMAGE_LIMITS.MAX_PER_PRODUCT
+    ) {
+      const err = new Error(
+        `Published products must have between ${PRODUCT_IMAGE_LIMITS.MIN_FOR_PUBLISHED} and ${PRODUCT_IMAGE_LIMITS.MAX_PER_PRODUCT} images`,
+      ) as Error & { code?: string };
+      err.code = 'INSUFFICIENT_IMAGES';
+      throw err;
+    }
+  } else if (count > PRODUCT_IMAGE_LIMITS.MAX_PER_PRODUCT) {
+    const err = new Error(
+      `Product cannot have more than ${PRODUCT_IMAGE_LIMITS.MAX_PER_PRODUCT} images`,
+    ) as Error & { code?: string };
+    err.code = 'IMAGE_LIMIT_EXCEEDED';
+    throw err;
+  }
+}
+
 export async function createProduct(db: DbExecutor, input: ProductInputPayload) {
   const { brandId, categoryIds, variants, images, ...data } = input;
+  validateImageCount(images?.length ?? 0, data.status === 'published');
+
   const [created] = await db
     .insert(products)
     .values({ ...data, brandId: brandId ?? null, slug: data.slug.trim().toLowerCase() })
@@ -136,6 +160,15 @@ export async function updateProduct(
 ) {
   const { categoryIds, brandId, slug, ...data } = input;
 
+  if (data.status === 'published') {
+    await db.execute(sql`SELECT id, status FROM products WHERE id = ${id} FOR UPDATE`);
+    const [imgResult] = await db
+      .select({ count: count() })
+      .from(productImages)
+      .where(eq(productImages.productId, id));
+    validateImageCount(Number(imgResult?.count ?? 0), true);
+  }
+
   if (categoryIds !== undefined) {
     await db.delete(productCategories).where(eq(productCategories.productId, id));
     if (categoryIds.length > 0) {
@@ -175,14 +208,7 @@ export async function fetchProductDetail(db: DbExecutor, productId: string) {
   if (!product) return null;
 
   const [brandRow, catRows, variantRows, imageRows, relRows, effectivePricing] = await Promise.all([
-    product.brandId
-      ? db
-          .select()
-          .from(brands)
-          .where(eq(brands.id, product.brandId))
-          .limit(1)
-          .then((rows) => rows[0] ?? null)
-      : Promise.resolve(null),
+    product.brandId ? findBrandById(db, product.brandId) : Promise.resolve(null),
     db
       .select({ category: categories })
       .from(productCategories)

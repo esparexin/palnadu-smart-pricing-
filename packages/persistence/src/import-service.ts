@@ -1,5 +1,6 @@
-import { inArray, sql } from 'drizzle-orm';
+import { count, inArray, sql } from 'drizzle-orm';
 import {
+  PRODUCT_IMAGE_LIMITS,
   ProductImportRowInputSchema,
   type ImportMode,
   type ImportRowError,
@@ -7,7 +8,7 @@ import {
 import type { DbExecutor } from './client.js';
 import { parseCsv } from './csv.js';
 import { createImportBatch, insertImportRows } from './catalogue-import-export.js';
-import { productVariants } from './schema.js';
+import { productImages, productVariants } from './schema.js';
 import { normalizeRow } from './import-template.js';
 
 function validateRowItem(
@@ -16,17 +17,14 @@ function validateRowItem(
   seenSkuRowMap: Map<string, number>,
   existing: { id: string; productId: string } | undefined,
   mode: ImportMode,
+  existingImageCount?: number,
 ): ImportRowError[] {
   const rowErrors: ImportRowError[] = [];
   const parseResult = ProductImportRowInputSchema.safeParse(norm);
 
   if (!parseResult.success) {
     for (const issue of parseResult.error.issues) {
-      rowErrors.push({
-        rowNumber: rowNum,
-        field: issue.path.join('.'),
-        reason: issue.message,
-      });
+      rowErrors.push({ rowNumber: rowNum, field: issue.path.join('.'), reason: issue.message });
     }
   }
 
@@ -66,6 +64,29 @@ function validateRowItem(
     });
   }
 
+  const imageUrls = Array.isArray(norm.imageUrls) ? norm.imageUrls : undefined;
+  if (imageUrls && imageUrls.length > PRODUCT_IMAGE_LIMITS.MAX_PER_PRODUCT) {
+    rowErrors.push({
+      rowNumber: rowNum,
+      field: 'imageUrls',
+      reason: `Product cannot have more than ${PRODUCT_IMAGE_LIMITS.MAX_PER_PRODUCT} images (found ${imageUrls.length})`,
+    });
+  }
+
+  if (norm.status === 'published') {
+    const imgCount = imageUrls !== undefined ? imageUrls.length : (existingImageCount ?? 0);
+    if (
+      imgCount < PRODUCT_IMAGE_LIMITS.MIN_FOR_PUBLISHED ||
+      imgCount > PRODUCT_IMAGE_LIMITS.MAX_PER_PRODUCT
+    ) {
+      rowErrors.push({
+        rowNumber: rowNum,
+        field: 'status',
+        reason: `Published products must have between ${PRODUCT_IMAGE_LIMITS.MIN_FOR_PUBLISHED} and ${PRODUCT_IMAGE_LIMITS.MAX_PER_PRODUCT} images (found ${imgCount})`,
+      });
+    }
+  }
+
   return rowErrors;
 }
 
@@ -87,6 +108,23 @@ async function fetchExistingSkuMap(
 
   for (const v of found) {
     if (v.sku) map.set(v.sku, { id: v.id, productId: v.productId });
+  }
+  return map;
+}
+
+async function fetchExistingImageCounts(
+  db: DbExecutor,
+  productIds: string[],
+): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  if (productIds.length === 0) return map;
+  const rows = await db
+    .select({ productId: productImages.productId, count: count() })
+    .from(productImages)
+    .where(inArray(productImages.productId, productIds))
+    .groupBy(productImages.productId);
+  for (const r of rows) {
+    map.set(r.productId, Number(r.count));
   }
   return map;
 }
@@ -123,6 +161,10 @@ export async function validateAndPreviewImport(
   );
 
   const existingSkuMap = await fetchExistingSkuMap(db, allSkus);
+  const existingProductIds = Array.from(
+    new Set(Array.from(existingSkuMap.values()).map((v) => v.productId)),
+  );
+  const existingImgCountMap = await fetchExistingImageCounts(db, existingProductIds);
   const seenSkuRowMap = new Map<string, number>();
 
   const validatedRows: {
@@ -139,7 +181,15 @@ export async function validateAndPreviewImport(
       .trim()
       .toLowerCase();
     const existing = existingSkuMap.get(skuNorm);
-    const rowErrors = validateRowItem(norm, rowNum, seenSkuRowMap, existing, params.mode);
+    const existingImgCount = existing ? existingImgCountMap.get(existing.productId) : undefined;
+    const rowErrors = validateRowItem(
+      norm,
+      rowNum,
+      seenSkuRowMap,
+      existing,
+      params.mode,
+      existingImgCount,
+    );
 
     const isValid = rowErrors.length === 0;
     if (!isValid) allErrors.push(...rowErrors);

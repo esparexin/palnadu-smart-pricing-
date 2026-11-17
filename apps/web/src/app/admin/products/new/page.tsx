@@ -18,10 +18,7 @@ function slugify(text: string): string {
 
 function parseDiscountValue(type: string, input: string): number {
   const val = parseFloat(input) || 0;
-  if (type === 'fixed' || type === 'percentage') {
-    return Math.round(val * 100);
-  }
-  return 0;
+  return type === 'fixed' || type === 'percentage' ? Math.round(val * 100) : 0;
 }
 
 export default function NewProductPage() {
@@ -76,6 +73,13 @@ export default function NewProductPage() {
     const offerPricePaise = Math.round((parseFloat(pricing.offerPriceRupees) || 0) * 100);
     if (mrpPaise > 0 && offerPricePaise > mrpPaise) {
       setError('Offer price cannot exceed MRP.');
+      return;
+    }
+
+    if (status === 'published') {
+      setError(
+        'New products cannot be published without images. Save as Draft first, then add at least 2 images.',
+      );
       return;
     }
 

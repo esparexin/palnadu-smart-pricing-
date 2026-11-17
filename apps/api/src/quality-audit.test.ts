@@ -179,6 +179,10 @@ describe('System Quality, Security & Privacy Audit', () => {
         slug: 'tmt-steel-bar-16mm',
         unit: 'Tons',
         status: 'published',
+        images: [
+          { url: 'https://images.example.com/bar1.jpg' },
+          { url: 'https://images.example.com/bar2.jpg' },
+        ],
       },
     });
 

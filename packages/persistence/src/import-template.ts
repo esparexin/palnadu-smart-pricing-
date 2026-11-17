@@ -13,6 +13,7 @@ export function getImportTemplateCsv(): string {
     'selling_price_paise',
     'cost_price_paise',
     'min_selling_price_paise',
+    'image_urls',
   ];
   const sampleRows = [
     {
@@ -107,5 +108,14 @@ export function normalizeRow(raw: Record<string, string>): Record<string, unknow
       ['min_selling_price_paise'],
       ['min_selling_price', 'min_price'],
     ),
+    imageUrls: (() => {
+      const v = (findVal('image_urls', 'images', 'image_url', 'Image URLs', 'Images') ?? '').trim();
+      if (!v) return undefined;
+      const urls = v
+        .split(/[;|]/)
+        .map((u) => u.trim())
+        .filter(Boolean);
+      return urls.length > 0 ? urls : undefined;
+    })(),
   };
 }

@@ -102,6 +102,7 @@ export const AdminImageCreateSchema = ProductImageInputSchema.extend({
 
 export const AdminImageUpdateSchema = z
   .object({
+    url: z.string().url().optional(),
     altText: z.string().trim().max(255).optional(),
     sortOrder: z.number().int().nonnegative().optional(),
     isPrimary: z.boolean().optional(),

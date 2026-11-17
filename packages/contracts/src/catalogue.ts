@@ -63,6 +63,11 @@ export const ProductVariantInputSchema = z
   })
   .strict();
 
+export const PRODUCT_IMAGE_LIMITS = {
+  MIN_FOR_PUBLISHED: 2,
+  MAX_PER_PRODUCT: 8,
+} as const;
+
 export const ProductImageInputSchema = z
   .object({
     url: z.string().url(),
@@ -91,13 +96,34 @@ export const AdminProductCreateSchema = z
     discountType: PricingDiscountTypeSchema.default('none'),
     discountValue: z.number().int().nonnegative().default(0),
     variants: z.array(ProductVariantInputSchema).default([]),
-    images: z.array(ProductImageInputSchema).default([]),
+    images: z
+      .array(ProductImageInputSchema)
+      .max(
+        PRODUCT_IMAGE_LIMITS.MAX_PER_PRODUCT,
+        `Product cannot have more than ${PRODUCT_IMAGE_LIMITS.MAX_PER_PRODUCT} images`,
+      )
+      .default([]),
   })
   .strict()
   .refine((data) => data.mrpPaise === 0 || data.offerPricePaise <= data.mrpPaise, {
     message: 'Base offer price cannot exceed base MRP',
     path: ['offerPricePaise'],
-  });
+  })
+  .refine(
+    (data) => {
+      if (data.status === 'published') {
+        return (
+          data.images.length >= PRODUCT_IMAGE_LIMITS.MIN_FOR_PUBLISHED &&
+          data.images.length <= PRODUCT_IMAGE_LIMITS.MAX_PER_PRODUCT
+        );
+      }
+      return data.images.length <= PRODUCT_IMAGE_LIMITS.MAX_PER_PRODUCT;
+    },
+    {
+      message: `Published products must have between ${PRODUCT_IMAGE_LIMITS.MIN_FOR_PUBLISHED} and ${PRODUCT_IMAGE_LIMITS.MAX_PER_PRODUCT} images`,
+      path: ['images'],
+    },
+  );
 
 export const PublicProductDtoSchema = z
   .object({

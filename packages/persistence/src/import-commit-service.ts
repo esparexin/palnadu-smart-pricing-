@@ -8,7 +8,7 @@ import {
 import { createBrand, findBrandByNormalizedNameOrSlug } from './catalogue-brands.js';
 import { createCategory, findCategoryByNormalizedNameOrSlug } from './catalogue-categories.js';
 import { createProduct } from './catalogue-products.js';
-import { importRows, products, productVariants } from './schema.js';
+import { importRows, productImages, products, productVariants } from './schema.js';
 
 function slugify(text: string): string {
   return text
@@ -51,6 +51,7 @@ interface NormalizedRowData {
   status?: 'draft' | 'published' | 'archived';
   mrpPaise?: number;
   sellingPricePaise?: number;
+  imageUrls?: string[];
 }
 
 async function updateExistingProductRow(
@@ -77,6 +78,21 @@ async function updateExistingProductRow(
       offerPricePaise: norm.sellingPricePaise ?? null,
     })
     .where(eq(productVariants.productId, productId));
+
+  if (norm.imageUrls && norm.imageUrls.length > 0) {
+    await db.delete(productImages).where(eq(productImages.productId, productId));
+    await db.insert(productImages).values(
+      norm.imageUrls.map((url, idx) => ({
+        productId,
+        url,
+        altText: `${norm.name} image ${idx + 1}`,
+        sortOrder: idx,
+        isPrimary: idx === 0,
+        rightsStatus: 'manual_upload' as const,
+      })),
+    );
+  }
+
   return productId;
 }
 
@@ -89,6 +105,14 @@ async function createNewProductRow(
   const generatedSlug =
     norm.slug || slugify(norm.name) || `product-${norm.sku.toLowerCase()}-${Date.now()}`;
 
+  const images = norm.imageUrls?.map((url, idx) => ({
+    url,
+    altText: `${norm.name} image ${idx + 1}`,
+    sortOrder: idx,
+    isPrimary: idx === 0,
+    rightsStatus: 'manual_upload' as const,
+  }));
+
   const product = await createProduct(db, {
     name: norm.name,
     slug: generatedSlug,
@@ -96,6 +120,7 @@ async function createNewProductRow(
     categoryIds: categoryId ? [categoryId] : [],
     description: norm.description ?? null,
     status: norm.status ?? 'draft',
+    images: images && images.length > 0 ? images : undefined,
     variants: [
       {
         sku: norm.sku,

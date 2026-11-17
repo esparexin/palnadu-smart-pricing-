@@ -85,6 +85,7 @@ export default function ProductDetailPage() {
         productId={product.id}
         images={product.images}
         onRefresh={loadProduct}
+        productStatus={product.status}
       />
 
       <ProductRelationshipsSection

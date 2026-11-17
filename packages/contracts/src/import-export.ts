@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PRODUCT_IMAGE_LIMITS } from './catalogue.js';
 
 export const ImportModeSchema = z.enum(['create_only', 'update_existing']);
 export type ImportMode = z.infer<typeof ImportModeSchema>;
@@ -33,6 +34,13 @@ export const ProductImportRowInputSchema = z.object({
   sellingPricePaise: z.number().int().nonnegative().optional(),
   costPricePaise: z.number().int().nonnegative().optional(),
   minSellingPricePaise: z.number().int().nonnegative().optional(),
+  imageUrls: z
+    .array(z.string().url())
+    .max(
+      PRODUCT_IMAGE_LIMITS.MAX_PER_PRODUCT,
+      `Product cannot have more than ${PRODUCT_IMAGE_LIMITS.MAX_PER_PRODUCT} images`,
+    )
+    .optional(),
 });
 export type ProductImportRowInput = z.infer<typeof ProductImportRowInputSchema>;
 

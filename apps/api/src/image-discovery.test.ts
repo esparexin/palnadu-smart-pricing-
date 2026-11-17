@@ -14,7 +14,7 @@ const config = parseServerConfig({
 function createMockDatabase(): DatabaseClient {
   const retVal = { returning: vi.fn().mockResolvedValue([]) };
   const mockUpdate = { set: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue(retVal) }) };
-  return {
+  const client = {
     close: vi.fn(),
     ping: vi.fn().mockResolvedValue(undefined),
     db: {
@@ -22,8 +22,10 @@ function createMockDatabase(): DatabaseClient {
       execute: vi.fn(),
       insert: vi.fn(),
       update: vi.fn().mockReturnValue(mockUpdate),
+      transaction: vi.fn(async (cb: (tx: unknown) => Promise<unknown>) => cb(client.db)),
     } as unknown as DatabaseClient['db'],
   };
+  return client;
 }
 
 const TEST_ADMIN = {
@@ -168,9 +170,12 @@ describe('Product Image Discovery API', () => {
       if (selectCalls === 1) return authChain() as never;
       return {
         from: () => ({
-          where: () => ({
-            limit: vi.fn().mockResolvedValue([{ ...SAMPLE_CANDIDATE, id: candidateId, productId }]),
-          }),
+          where: () => {
+            const list = [{ ...SAMPLE_CANDIDATE, id: candidateId, productId, count: 0 }];
+            return Object.assign(Promise.resolve(list), {
+              limit: vi.fn().mockResolvedValue(list),
+            });
+          },
         }),
       } as never;
     });

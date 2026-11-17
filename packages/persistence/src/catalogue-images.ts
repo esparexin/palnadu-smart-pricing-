@@ -1,6 +1,7 @@
-import { and, eq } from 'drizzle-orm';
+import { and, count, eq, sql } from 'drizzle-orm';
+import { PRODUCT_IMAGE_LIMITS } from '@palnadu/contracts';
 import type { DbExecutor } from './client.js';
-import { productImages, productVariants } from './schema.js';
+import { productImages, products, productVariants } from './schema.js';
 
 export async function validateVariantBelongsToProduct(
   db: DbExecutor,
@@ -38,6 +39,22 @@ export async function createProductImage(
     variantId?: string | null;
   },
 ) {
+  await db.execute(sql`SELECT id, status FROM products WHERE id = ${productId} FOR UPDATE`);
+
+  const [countResult] = await db
+    .select({ count: count() })
+    .from(productImages)
+    .where(eq(productImages.productId, productId));
+  const currentCount = Number(countResult?.count ?? 0);
+
+  if (currentCount >= PRODUCT_IMAGE_LIMITS.MAX_PER_PRODUCT) {
+    const error = new Error(
+      `Product cannot have more than ${PRODUCT_IMAGE_LIMITS.MAX_PER_PRODUCT} images`,
+    ) as Error & { code?: string };
+    error.code = 'IMAGE_LIMIT_EXCEEDED';
+    throw error;
+  }
+
   if (input.isPrimary) {
     await clearPrimaryImages(db, productId);
   }
@@ -79,6 +96,7 @@ export async function updateProductImage(
   productId: string,
   id: string,
   input: {
+    url?: string;
     altText?: string;
     sortOrder?: number;
     isPrimary?: boolean;
@@ -99,6 +117,51 @@ export async function updateProductImage(
 }
 
 export async function deleteProductImage(db: DbExecutor, productId: string, id: string) {
+  await db.execute(sql`SELECT id, status FROM products WHERE id = ${productId} FOR UPDATE`);
+
+  const [targetImage] = await db
+    .select({ id: productImages.id, isPrimary: productImages.isPrimary })
+    .from(productImages)
+    .where(and(eq(productImages.id, id), eq(productImages.productId, productId)))
+    .limit(1);
+
+  if (!targetImage) return false;
+
+  const [product] = await db
+    .select({ status: products.status })
+    .from(products)
+    .where(eq(products.id, productId))
+    .limit(1);
+
+  const [countResult] = await db
+    .select({ count: count() })
+    .from(productImages)
+    .where(eq(productImages.productId, productId));
+  const currentCount = Number(countResult?.count ?? 0);
+
+  if (product?.status === 'published' && currentCount <= PRODUCT_IMAGE_LIMITS.MIN_FOR_PUBLISHED) {
+    const error = new Error(
+      `Published products must have at least ${PRODUCT_IMAGE_LIMITS.MIN_FOR_PUBLISHED} images`,
+    ) as Error & { code?: string };
+    error.code = 'INSUFFICIENT_IMAGES';
+    throw error;
+  }
+
+  if (targetImage.isPrimary) {
+    const [nextPrimary] = await db
+      .select({ id: productImages.id })
+      .from(productImages)
+      .where(and(eq(productImages.productId, productId), sql`${productImages.id} <> ${id}`))
+      .orderBy(productImages.sortOrder)
+      .limit(1);
+    if (nextPrimary) {
+      await db
+        .update(productImages)
+        .set({ isPrimary: true })
+        .where(eq(productImages.id, nextPrimary.id));
+    }
+  }
+
   const deleted = await db
     .delete(productImages)
     .where(and(eq(productImages.id, id), eq(productImages.productId, productId)))

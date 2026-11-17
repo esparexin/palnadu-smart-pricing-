@@ -143,12 +143,20 @@ export const discoveryRoutes: FastifyPluginAsync<DiscoveryRouteOptions> = async 
         return reply.status(404).send(errorResponse('NOT_FOUND', 'Candidate not found', req.id));
       }
 
-      const result = await approveCandidateAndCreateImage(
-        database.db,
-        params.data.candidateId,
-        body.data,
-      );
-      return reply.status(201).send(result);
+      try {
+        const result = await database.db.transaction((tx) =>
+          approveCandidateAndCreateImage(tx, params.data.candidateId, body.data),
+        );
+        return reply.status(201).send(result);
+      } catch (err: unknown) {
+        const ec = (err as { code?: string })?.code;
+        if (ec === 'IMAGE_LIMIT_EXCEEDED') {
+          return reply
+            .status(400)
+            .send(errorResponse('IMAGE_LIMIT_EXCEEDED', (err as Error).message, req.id));
+        }
+        throw err;
+      }
     },
   );
 

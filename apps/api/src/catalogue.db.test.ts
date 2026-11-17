@@ -281,8 +281,9 @@ describe('Admin Catalogue API (PostgreSQL Integration)', () => {
         offerPricePaise: 270000,
         discountType: 'percentage',
         discountValue: 1000,
-        status: 'published',
+        status: 'draft',
       });
+      expect(otherRes.statusCode).toBe(201);
       otherProductId = otherRes.json().id;
     });
 
@@ -453,7 +454,33 @@ describe('Admin Catalogue API (PostgreSQL Integration)', () => {
       expect(body.effectivePricing).toBeDefined();
     });
 
-    it('updates product and changes category association', async () => {
+    it('enforces 2-8 image limits during status updates and deletes, and changes category association', async () => {
+      // 1. Attempting to publish with only 1 image must be rejected
+      const rejectPubRes = await req(
+        'PATCH',
+        `/api/v1/admin/products/${productId}`,
+        managerCookie,
+        {
+          status: 'published',
+        },
+      );
+      expect(rejectPubRes.statusCode).toBe(400);
+      expect(rejectPubRes.json().error.code).toBe('INSUFFICIENT_IMAGES');
+
+      // 2. Add second image to satisfy 2-8 requirement
+      const img2Res = await req(
+        'POST',
+        `/api/v1/admin/products/${productId}/images`,
+        managerCookie,
+        {
+          url: 'https://images.example.com/product-x-2.jpg',
+          altText: 'Product X Back',
+        },
+      );
+      expect(img2Res.statusCode).toBe(201);
+      const secondImageId = img2Res.json().id;
+
+      // 3. Now publishing succeeds
       const res = await req('PATCH', `/api/v1/admin/products/${productId}`, managerCookie, {
         name: 'Renamed Product X',
         categoryIds: [otherCatId],
@@ -465,6 +492,15 @@ describe('Admin Catalogue API (PostgreSQL Integration)', () => {
       expect(body.status).toBe('published');
       expect(body.categories).toHaveLength(1);
       expect(body.categories[0].id).toBe(otherCatId);
+
+      // 4. Deletion of an image when published with only 2 images must be rejected
+      const rejectDelRes = await req(
+        'DELETE',
+        `/api/v1/admin/products/${productId}/images/${secondImageId}`,
+        managerCookie,
+      );
+      expect(rejectDelRes.statusCode).toBe(400);
+      expect(rejectDelRes.json().error.code).toBe('INSUFFICIENT_IMAGES');
     });
 
     it('deletes product and its dependent child entities cleanly', async () => {

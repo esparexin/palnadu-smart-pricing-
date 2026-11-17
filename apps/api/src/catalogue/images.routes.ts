@@ -95,10 +95,26 @@ export const imagesRoutes: FastifyPluginAsync<CatalogueRouteOptions> = async (ra
         }
       }
 
-      const created = await database.db.transaction((tx) =>
-        createProductImage(tx, productId, data),
-      );
-      return reply.status(201).send(toImageDto(created));
+      try {
+        const created = await database.db.transaction((tx) =>
+          createProductImage(tx, productId, data),
+        );
+        return reply.status(201).send(toImageDto(created));
+      } catch (err: unknown) {
+        const errWithCode = err as { code?: string; message?: string };
+        if (errWithCode.code === 'IMAGE_LIMIT_EXCEEDED') {
+          return reply
+            .status(400)
+            .send(
+              errorResponse(
+                'IMAGE_LIMIT_EXCEEDED',
+                errWithCode.message || 'Image limit exceeded',
+                request.id,
+              ),
+            );
+        }
+        throw err;
+      }
     },
   );
 
@@ -187,7 +203,11 @@ export const imagesRoutes: FastifyPluginAsync<CatalogueRouteOptions> = async (ra
       preHandler: [requireAdminAuth(database), requireAdminPermission('catalogue:manage')],
       schema: {
         params: ImageIdParamSchema,
-        response: { 200: SuccessResponseSchema, 404: ApiErrorResponseSchema },
+        response: {
+          200: SuccessResponseSchema,
+          400: ApiErrorResponseSchema,
+          404: ApiErrorResponseSchema,
+        },
       },
     },
     async (request, reply) => {
@@ -198,8 +218,24 @@ export const imagesRoutes: FastifyPluginAsync<CatalogueRouteOptions> = async (ra
           .status(404)
           .send(errorResponse('IMAGE_NOT_FOUND', 'Image not found', request.id));
 
-      await deleteProductImage(database.db, productId, id);
-      return { success: true as const };
+      try {
+        await database.db.transaction((tx) => deleteProductImage(tx, productId, id));
+        return { success: true as const };
+      } catch (err: unknown) {
+        const errWithCode = err as { code?: string; message?: string };
+        if (errWithCode.code === 'INSUFFICIENT_IMAGES') {
+          return reply
+            .status(400)
+            .send(
+              errorResponse(
+                'INSUFFICIENT_IMAGES',
+                errWithCode.message || 'Insufficient images',
+                request.id,
+              ),
+            );
+        }
+        throw err;
+      }
     },
   );
 };
