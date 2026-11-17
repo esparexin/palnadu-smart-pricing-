@@ -33,18 +33,84 @@ export class StorefrontClient {
   private brandsCache: { data: BrandResponse[]; timestamp: number; key: string } | null = null;
   private pendingBrands = new Map<string, Promise<BrandResponse[]>>();
 
+  private productsCache = new Map<string, { data: PublicProductListResponse; timestamp: number }>();
+  private pendingProducts = new Map<string, Promise<PublicProductListResponse>>();
+
+  private productBySlugCache = new Map<string, { data: PublicProductDto; timestamp: number }>();
+  private pendingProductBySlug = new Map<string, Promise<PublicProductDto>>();
+
   constructor(private readonly executor: RequestExecutor) {}
 
-  public listProducts(params?: Partial<PublicProductQuery>): Promise<PublicProductListResponse> {
-    return this.executor.request<PublicProductListResponse>(
-      `/api/v1/public/products${buildQuery(params as Record<string, unknown>)}`,
-    );
+  public clearCache(): void {
+    this.categoriesCache = null;
+    this.pendingCategories.clear();
+    this.brandsCache = null;
+    this.pendingBrands.clear();
+    this.productsCache.clear();
+    this.pendingProducts.clear();
+    this.productBySlugCache.clear();
+    this.pendingProductBySlug.clear();
   }
 
-  public getProductBySlug(slug: string): Promise<PublicProductDto> {
-    return this.executor.request<PublicProductDto>(
-      `/api/v1/public/products/${encodeURIComponent(slug)}`,
-    );
+  public async listProducts(
+    params?: Partial<PublicProductQuery>,
+  ): Promise<PublicProductListResponse> {
+    const qs = buildQuery(params as Record<string, unknown>);
+    const key = qs || '__all__';
+    const now = Date.now();
+    const cached = this.productsCache.get(key);
+    if (cached && now - cached.timestamp < 30_000) {
+      return cached.data;
+    }
+
+    const pending = this.pendingProducts.get(key);
+    if (pending) {
+      return pending;
+    }
+
+    const promise = this.executor
+      .request<PublicProductListResponse>(`/api/v1/public/products${qs}`)
+      .then((data) => {
+        this.productsCache.set(key, { data, timestamp: Date.now() });
+        this.pendingProducts.delete(key);
+        return data;
+      })
+      .catch((err) => {
+        this.pendingProducts.delete(key);
+        throw err;
+      });
+
+    this.pendingProducts.set(key, promise);
+    return promise;
+  }
+
+  public async getProductBySlug(slug: string): Promise<PublicProductDto> {
+    const key = slug.trim().toLowerCase();
+    const now = Date.now();
+    const cached = this.productBySlugCache.get(key);
+    if (cached && now - cached.timestamp < 30_000) {
+      return cached.data;
+    }
+
+    const pending = this.pendingProductBySlug.get(key);
+    if (pending) {
+      return pending;
+    }
+
+    const promise = this.executor
+      .request<PublicProductDto>(`/api/v1/public/products/${encodeURIComponent(slug)}`)
+      .then((data) => {
+        this.productBySlugCache.set(key, { data, timestamp: Date.now() });
+        this.pendingProductBySlug.delete(key);
+        return data;
+      })
+      .catch((err) => {
+        this.pendingProductBySlug.delete(key);
+        throw err;
+      });
+
+    this.pendingProductBySlug.set(key, promise);
+    return promise;
   }
 
   public async listCategories(q?: string): Promise<CategoryResponse[]> {

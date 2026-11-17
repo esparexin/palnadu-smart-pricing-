@@ -22,6 +22,7 @@ import {
   type DatabaseClient,
 } from '@palnadu/persistence';
 import { errorResponse, requireAdminAuth, requireAdminPermission } from '../auth/auth.guards.js';
+import { bumpCatalogueRevision } from './catalogue-revision.js';
 import { formatCategory, IdParamSchema } from './catalogue.helpers.js';
 
 export interface CatalogueRouteOptions {
@@ -72,6 +73,7 @@ export const categoriesRoutes: FastifyPluginAsync<CatalogueRouteOptions> = async
           .send(errorResponse('DUPLICATE_CATEGORY', 'Category name or slug exists', request.id));
       }
       const created = await createCategory(database.db, { name, slug, parentId });
+      bumpCatalogueRevision(request.log);
       return reply.status(201).send(formatCategory(created));
     },
   );
@@ -172,6 +174,7 @@ export const categoriesRoutes: FastifyPluginAsync<CatalogueRouteOptions> = async
         }
 
         const updated = await updateCategory(tx, id, { name, slug, parentId });
+        bumpCatalogueRevision(request.log);
         return formatCategory(updated!);
       });
     },
@@ -225,6 +228,7 @@ export const categoriesRoutes: FastifyPluginAsync<CatalogueRouteOptions> = async
       }
 
       await deleteCategory(database.db, id);
+      bumpCatalogueRevision(request.log);
       return { success: true as const };
     },
   );

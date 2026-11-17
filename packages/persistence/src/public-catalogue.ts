@@ -73,12 +73,22 @@ export async function listPublicProducts(
   }
 
   const filter = and(...conditions);
-  const [productRows, totalResult] = await Promise.all([
-    db.select().from(products).where(filter).limit(limit).offset(offset).orderBy(products.name),
-    db.select({ count: count() }).from(products).where(filter),
-  ]);
+  const productRows = await db
+    .select()
+    .from(products)
+    .where(filter)
+    .limit(limit)
+    .offset(offset)
+    .orderBy(products.name);
 
-  const total = totalResult[0]?.count ?? 0;
+  let total: number;
+  if (offset === 0 && productRows.length < limit) {
+    total = productRows.length;
+  } else {
+    const totalResult = await db.select({ count: count() }).from(products).where(filter);
+    total = totalResult[0]?.count ?? 0;
+  }
+
   if (productRows.length === 0) {
     return { items: [], total };
   }

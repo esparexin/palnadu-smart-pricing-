@@ -20,6 +20,7 @@ import {
   type DatabaseClient,
 } from '@palnadu/persistence';
 import { errorResponse, requireAdminAuth, requireAdminPermission } from '../auth/auth.guards.js';
+import { bumpCatalogueRevision } from './catalogue-revision.js';
 
 export interface CatalogueRouteOptions {
   database: DatabaseClient;
@@ -99,6 +100,7 @@ export const imagesRoutes: FastifyPluginAsync<CatalogueRouteOptions> = async (ra
         const created = await database.db.transaction((tx) =>
           createProductImage(tx, productId, data),
         );
+        bumpCatalogueRevision(request.log);
         return reply.status(201).send(toImageDto(created));
       } catch (err: unknown) {
         const errWithCode = err as { code?: string; message?: string };
@@ -192,6 +194,7 @@ export const imagesRoutes: FastifyPluginAsync<CatalogueRouteOptions> = async (ra
       const updated = await database.db.transaction((tx) =>
         updateProductImage(tx, productId, id, data),
       );
+      bumpCatalogueRevision(request.log);
       return toImageDto(updated!);
     },
   );
@@ -220,6 +223,7 @@ export const imagesRoutes: FastifyPluginAsync<CatalogueRouteOptions> = async (ra
 
       try {
         await database.db.transaction((tx) => deleteProductImage(tx, productId, id));
+        bumpCatalogueRevision(request.log);
         return { success: true as const };
       } catch (err: unknown) {
         const errWithCode = err as { code?: string; message?: string };
