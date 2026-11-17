@@ -1,5 +1,9 @@
 import { eq } from 'drizzle-orm';
-import type { AdminQuotationDetail, QuotationDeliveryStatus } from '@palnadu/contracts';
+import {
+  type AdminQuotationDetail,
+  type QuotationDeliveryStatus,
+  PRICING_DISCLOSURES,
+} from '@palnadu/contracts';
 import type { DbExecutor } from './client.js';
 import { quotationRequests } from './quotation.schema.js';
 import { findQuotationById } from './quotations.js';
@@ -31,7 +35,7 @@ export function formatQuotationEstimateText(quotation: AdminQuotationDetail): st
   }
   lines.push(`Estimated Total: ${formatMoney(quotation.grandTotalPaise)}`);
   lines.push('');
-  lines.push('Note: This is an automated quotation estimate, not a confirmed purchase or order.');
+  lines.push(`Note: ${PRICING_DISCLOSURES.WHATSAPP_NOTE}`);
 
   return lines.join('\n');
 }

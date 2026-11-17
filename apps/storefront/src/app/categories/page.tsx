@@ -9,6 +9,7 @@ import { StorefrontFooter } from '../../components/storefront/storefront-footer'
 import { LoadingState } from '../../components/loading-state';
 import { ErrorState } from '../../components/error-state';
 import { EmptyState } from '../../components/empty-state';
+import { PricingDisclosure } from '../../components/storefront/pricing-disclosure';
 
 const apiClient = new ApiClient();
 
@@ -72,6 +73,8 @@ export default function CategoriesBrowsePage() {
               className="w-full min-h-[44px] rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
+
+          <PricingDisclosure variant="primary" className="mt-6" />
         </div>
       </section>
 

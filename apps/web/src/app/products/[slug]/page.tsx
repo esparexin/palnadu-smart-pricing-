@@ -11,6 +11,7 @@ import { ProductGallery } from '../../../components/storefront/product-gallery';
 import { ProductSpecificationsTable } from '../../../components/storefront/product-specifications-table';
 import { ProductRecommendationsList } from '../../../components/storefront/product-recommendations-list';
 import { ProductActionBar } from '../../../components/storefront/product-action-bar';
+import { PricingDisclosure } from '../../../components/storefront/pricing-disclosure';
 import { LoadingState } from '../../../components/loading-state';
 import { ErrorState } from '../../../components/error-state';
 
@@ -147,6 +148,9 @@ export default function ProductDetailPage() {
                 <ProductActionBar product={product} />
               </div>
             </div>
+
+            {/* Pricing Transparency Disclosure */}
+            <PricingDisclosure variant="primary" className="my-6" />
 
             {/* Detailed Specs and Variants */}
             <ProductSpecificationsTable product={product} />

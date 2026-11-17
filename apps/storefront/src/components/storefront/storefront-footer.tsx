@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { PRICING_DISCLOSURES } from '@palnadu/contracts';
 
 export function StorefrontFooter() {
   return (
@@ -44,15 +45,30 @@ export function StorefrontFooter() {
                   Quote Basket
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/terms"
+                  className="text-sm text-slate-600 hover:text-blue-600 focus:outline-none focus:underline"
+                >
+                  Terms & Conditions
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/privacy"
+                  className="text-sm text-slate-600 hover:text-blue-600 focus:outline-none focus:underline"
+                >
+                  Privacy Policy
+                </Link>
+              </li>
             </ul>
           </div>
           <div>
             <h3 className="text-sm font-semibold tracking-wider text-slate-900 uppercase">
-              Price Privacy & Enquiries
+              Pricing Transparency
             </h3>
-            <p className="mt-2 text-sm text-slate-500">
-              Prices and bulk rates are confidential and calculated on a per-quotation basis. Add
-              products to your enquiry request to receive an authoritative quote snapshot.
+            <p className="mt-2 text-xs text-slate-500 leading-relaxed">
+              {PRICING_DISCLOSURES.PRIMARY}
             </p>
           </div>
         </div>

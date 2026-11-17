@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import type { PublicProductDto } from '@palnadu/contracts';
 import { useBasket } from '../../context/basket-context';
+import { PricingDisclosure } from './pricing-disclosure';
 
 export interface ProductCardProps {
   product: PublicProductDto;
@@ -95,6 +96,8 @@ export function ProductCard({ product }: ProductCardProps) {
           {product.description && (
             <p className="mt-2 text-sm text-slate-600 line-clamp-2">{product.description}</p>
           )}
+
+          <PricingDisclosure variant="compact" className="mt-2.5" />
         </div>
       </div>
 

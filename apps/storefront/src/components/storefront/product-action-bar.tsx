@@ -46,10 +46,10 @@ export function ProductActionBar({ product }: ProductActionBarProps) {
       <aside className="hidden md:block rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
         <div>
           <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Price Confidentiality Guaranteed
+            Indicative Estimate / Quotation Pricing
           </div>
           <div className="text-sm font-medium text-slate-900 mt-0.5">
-            Official commercial pricing calculated upon request
+            Prices are estimates and may vary. Final commercial terms confirmed during quotation.
           </div>
         </div>
 
@@ -131,6 +131,9 @@ export function ProductActionBar({ product }: ProductActionBarProps) {
       {/* Mobile-only sticky bottom action bar - exactly ONE action instance active on mobile */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200 bg-white/95 p-3.5 shadow-lg backdrop-blur pb-safe">
         <div className="mx-auto max-w-lg">
+          <p className="text-[11px] text-slate-500 text-center pb-2 italic">
+            Indicative estimate • Final terms confirmed during quotation
+          </p>
           {justAdded || isAlreadyInBasket ? (
             <div className="flex flex-1 gap-2">
               <button

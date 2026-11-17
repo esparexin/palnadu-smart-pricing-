@@ -10,6 +10,7 @@ import { StorefrontFooter } from '../../components/storefront/storefront-footer'
 import { BasketItemRow } from '../../components/storefront/basket-item-row';
 import { BasketSubmissionForm } from '../../components/storefront/basket-submission-form';
 import { BasketSuccessView } from '../../components/storefront/basket-success-view';
+import { PricingDisclosure } from '../../components/storefront/pricing-disclosure';
 
 export default function BasketPage() {
   const { items, itemCount, isMounted, updateQuantity, removeItem, clearBasket } = useBasket();
@@ -137,17 +138,8 @@ export default function BasketPage() {
                 ))}
               </div>
 
-              {/* Price Confidentiality Card */}
-              <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 text-xs text-slate-700">
-                <div className="font-bold uppercase tracking-wider text-blue-900 mb-1">
-                  Price Confidentiality Policy
-                </div>
-                <p className="text-slate-600 leading-relaxed">
-                  Palnadu Smart Pricing strictly maintains wholesale price confidentiality. Official
-                  volume discounts, customer-tier pricing, and binding quotations are computed
-                  directly by authorized sales managers upon enquiry submission.
-                </p>
-              </div>
+              {/* Indicative Quotation Notice */}
+              <PricingDisclosure variant="basket" />
             </div>
 
             {/* Submission Form Column */}
