@@ -10,7 +10,6 @@ import { CategoryIcon } from '../../components/storefront/category-icon';
 import { LoadingState } from '../../components/loading-state';
 import { ErrorState } from '../../components/error-state';
 import { EmptyState } from '../../components/empty-state';
-import { PricingDisclosure } from '../../components/storefront/pricing-disclosure';
 
 export default function CategoriesBrowsePage() {
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
@@ -179,11 +178,6 @@ export default function CategoriesBrowsePage() {
             })}
           </div>
         )}
-
-        {/* Pricing Transparency Disclosure Notice */}
-        <section className="pt-4">
-          <PricingDisclosure variant="primary" />
-        </section>
       </main>
 
       <StorefrontFooter />

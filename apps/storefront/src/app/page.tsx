@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useEffect, useMemo, useState, useTransition } from 'react';
+import Link from 'next/link';
 import type { CategoryResponse, PublicProductDto } from '@palnadu/contracts';
 import { apiClient } from '../lib/api-client';
+import { useBasket } from '../context/basket-context';
 import { StorefrontHeader } from '../components/storefront/storefront-header';
 import { StorefrontFooter } from '../components/storefront/storefront-footer';
 import { ProductCard } from '../components/storefront/product-card';
@@ -10,7 +12,6 @@ import { CategoryIcon } from '../components/storefront/category-icon';
 import { LoadingState } from '../components/loading-state';
 import { ErrorState } from '../components/error-state';
 import { EmptyState } from '../components/empty-state';
-import { PricingDisclosure } from '../components/storefront/pricing-disclosure';
 
 interface CategorySelectorProps {
   categories: CategoryResponse[];
@@ -313,7 +314,18 @@ export default function StorefrontHomePage() {
   const [page, setPage] = useState(1);
   const pageSize = 12;
 
+  const { itemCount, isMounted } = useBasket();
   const [, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('focus') === 'search') {
+        const input = document.getElementById('catalogue-search') as HTMLInputElement | null;
+        input?.focus();
+      }
+    }
+  }, []);
 
   useEffect(() => {
     apiClient.storefront
@@ -387,8 +399,8 @@ export default function StorefrontHomePage() {
     <div className="flex min-h-screen flex-col bg-slate-50">
       <StorefrontHeader />
 
-      {/* Prominent Search Bar Section */}
-      <section className="border-b border-slate-200 bg-white py-4 sm:py-6 shadow-sm">
+      {/* Prominent Search Bar Section - Sticky Top */}
+      <section className="sticky top-[61px] z-20 border-b border-slate-200 bg-white/95 backdrop-blur py-2.5 sm:py-3.5 shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <form
             onSubmit={(e) => {
@@ -455,7 +467,64 @@ export default function StorefrontHomePage() {
       </section>
 
       {/* Main Content Area */}
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 space-y-6">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 space-y-6">
+        {/* Quote Basket Summary Card / CTA */}
+        {isMounted && itemCount > 0 && (
+          <section
+            aria-label="Quote Basket CTA"
+            className="rounded-xl border border-blue-200 bg-blue-50/80 p-4 shadow-sm"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-600 font-bold text-white text-sm">
+                  {itemCount}
+                </span>
+                <div>
+                  <h2 className="text-sm font-bold text-slate-900">
+                    Quote Basket &bull; {itemCount} {itemCount === 1 ? 'product' : 'products'}{' '}
+                    selected
+                  </h2>
+                  <p className="text-xs text-slate-600">
+                    Ready to request custom pricing? Review your items and submit a quote enquiry.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/basket"
+                className="inline-flex min-h-[44px] w-full sm:w-auto items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <span>Review &amp; Request Quote</span>
+                <span aria-hidden="true">&rarr;</span>
+              </Link>
+            </div>
+          </section>
+        )}
+
+        {/* Floating Quote Basket CTA for Mobile View */}
+        {isMounted && (
+          <div className="fixed bottom-5 right-4 z-40 md:hidden">
+            <Link
+              href="/basket"
+              className="flex min-h-[44px] items-center gap-2 rounded-full bg-blue-600 px-4 py-3 text-sm font-bold text-white shadow-xl hover:bg-blue-700 active:scale-95 transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              aria-label="Quote Basket"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.75}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                />
+              </svg>
+              <span>Quote Basket</span>
+              {itemCount > 0 && (
+                <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white px-1.5 text-xs font-black text-blue-700">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
+          </div>
+        )}
         <CategorySelector
           categories={categories}
           selectedCategory={selectedCategory}
@@ -527,10 +596,6 @@ export default function StorefrontHomePage() {
             onRetry={fetchProducts}
             onResetFilters={handleResetFilters}
           />
-        </section>
-
-        <section className="pt-6">
-          <PricingDisclosure variant="primary" />
         </section>
       </main>
 
