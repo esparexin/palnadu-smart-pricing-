@@ -1,0 +1,28 @@
+original_source_brand,canonical_brand,canonical_slug,mapping_rule,evidence,resolution_status,decision_policy,product_count_in_dataset
+CP PLUS,CP PLUS,cp-plus,Direct exact match to canonical brand CP PLUS,"cpplusworld.com official catalog, 186 verified models",RESOLVED_CANONICAL,APPROVED_FOR_STAGING,186
+Axis,Axis Communications,axis,Mapped to approved canonical name Axis Communications per Decision Register,"axis.com, Canon Group company",RESOLVED_CANONICAL,APPROVED_FOR_STAGING,13
+Axis Communications,Axis Communications,axis,Direct match to canonical brand Axis Communications,axis.com official product index,RESOLVED_CANONICAL,APPROVED_FOR_STAGING,13
+Dahua,Dahua,dahua,Direct match to canonical brand Dahua,dahuasecurity.com WizSense/WizMind product index,RESOLVED_CANONICAL,APPROVED_FOR_STAGING,12
+Sony,Sony,sony,Direct match to canonical brand Sony,pro.sony Network Surveillance series,RESOLVED_CANONICAL,APPROVED_FOR_STAGING,10
+Hanwha Vision,Hanwha Vision,hanwha-vision,Direct match to canonical brand Hanwha Vision (formerly Techwin/Wisenet),hanwhavision.com Wisenet platform,RESOLVED_CANONICAL,APPROVED_FOR_STAGING,7
+EZVIZ,EZVIZ,ezviz,Direct match to canonical brand EZVIZ,ezviz.com smart IoT camera listings,RESOLVED_CANONICAL,APPROVED_FOR_STAGING,6
+Secureye,Secureye,secureye,Direct match to canonical brand Secureye,secureye.com Fortune Marketing product index,RESOLVED_CANONICAL,APPROVED_FOR_STAGING,6
+Hi-Focus,Hi-Focus,hi-focus,Direct match to canonical brand Hi-Focus (alias HiFocus),hifocuscctv.com HiFocus Electronics India Pvt. Ltd.,RESOLVED_CANONICAL,APPROVED_FOR_STAGING,5
+Hikvision,Hikvision,hikvision,Direct match to canonical brand Hikvision,hikvision.com official listings & datasheet mirrors,RESOLVED_CANONICAL,APPROVED_FOR_STAGING,5
+Uniview/UNV,Uniview,uniview,Mapped UNV alias to canonical brand Uniview,"uniview.com Zhejiang Uniview Technologies Co., Ltd.",RESOLVED_CANONICAL,APPROVED_FOR_STAGING,5
+Panasonic/i-PRO,i-PRO,i-pro,"Resolved ambiguous combo label to i-PRO because all 5 models are WV-series manufactured by i-PRO Co., Ltd.","i-pro.com; WV-S2236L, WV-U1132, WV-U2532L, WV-S2536LTN, WV-S1536LN",RESOLVED_SPECIFIC_CANONICAL,APPROVED_FOR_STAGING,5
+i-PRO,i-PRO,i-pro,Direct match to canonical brand i-PRO,i-pro.com independent security OEM,RESOLVED_CANONICAL,APPROVED_FOR_STAGING,5
+Panasonic,Panasonic,panasonic,Kept separate from i-PRO per approved Decision Register,security.in.panasonic.com; 0 models in current dataset pass (all WV models belonged to i-PRO),APPROVED_CANONICAL_ZERO_MODELS,APPROVED_BRAND_NO_MODELS,0
+Godrej,Godrej Security Solutions,godrej,Mapped to approved canonical name Godrej Security Solutions per Decision Register,godrejenterprises.com Godrej & Boyce Mfg. Co. Ltd.,RESOLVED_CANONICAL,APPROVED_FOR_STAGING,4
+Godrej Security Solutions,Godrej Security Solutions,godrej,Direct match to canonical brand Godrej Security Solutions,godrejenterprises.com Eve Pro smart camera series,RESOLVED_CANONICAL,APPROVED_FOR_STAGING,4
+Reolink,Reolink,reolink,Direct match to canonical brand Reolink,reolink.com Argus & Lumus consumer WiFi models,RESOLVED_CANONICAL,APPROVED_FOR_STAGING,4
+Vivotek,Vivotek,vivotek,Direct match to canonical brand Vivotek,vivotek.com Delta Group Company,RESOLVED_CANONICAL,APPROVED_FOR_STAGING,4
+TP-Link Tapo,TP-Link,tp-link,Sub-brand Tapo consolidated under approved umbrella brand TP-Link per Decision Register,"tp-link.com/in Tapo C200, C210, C310",RESOLVED_CANONICAL_UMBRELLA,APPROVED_FOR_STAGING,3
+TP-Link VIGI,TP-Link,tp-link,Commercial series VIGI consolidated under approved umbrella brand TP-Link per Decision Register,"tp-link.com/in VIGI C340, C440",RESOLVED_CANONICAL_UMBRELLA,APPROVED_FOR_STAGING,2
+Honeywell,Honeywell,honeywell,Direct match to canonical brand Honeywell,buildings.honeywell.com 35 series IP cameras,RESOLVED_CANONICAL,APPROVED_FOR_STAGING,2
+Sparsh,Sparsh,sparsh,Direct match to canonical brand Sparsh (Samriddhi Automations),sparshsecuritech.com VN-IB20-F36,RESOLVED_CANONICAL,APPROVED_FOR_STAGING,1
+Trueview,Trueview,trueview,Canonical brand approved; 2 source records rejected due to missing model numbers,trueview.co.in; rejected unmodelled rows in cctv_rejected_records.csv,APPROVED_CANONICAL_RECORDS_REJECTED,APPROVED_BRAND_REJECTED_ROWS,0
+Bosch,UNMAPPED / PENDING_OWNER_DECISION,bosch-security-systems,Decision 1 Option B: Excluded from approved catalogue import. Held in pending dataset.,boschsecurity.com 76 commercial models,UNMAPPED_EXCLUDED_PER_OPTION_B,EXCLUDED_FROM_STAGING,76
+Bosch Security,UNMAPPED / PENDING_OWNER_DECISION,bosch-security-systems,Decision 1 Option B: Excluded from approved catalogue import. Held in pending dataset.,boschsecurity.com 76 models,UNMAPPED_EXCLUDED_PER_OPTION_B,EXCLUDED_FROM_STAGING,76
+Tiandy,UNMAPPED / PENDING_OWNER_DECISION,tiandy,Decision 1 Option B: Excluded from approved catalogue import. Held in pending dataset.,tiandy.com 10 commercial models,UNMAPPED_EXCLUDED_PER_OPTION_B,EXCLUDED_FROM_STAGING,10
+IMOU,UNMAPPED / PENDING_OWNER_DECISION,imou,Decision 1 Option B: Excluded from approved catalogue import. Held in pending dataset.,imoulife.com 7 consumer models,UNMAPPED_EXCLUDED_PER_OPTION_B,EXCLUDED_FROM_STAGING,7
