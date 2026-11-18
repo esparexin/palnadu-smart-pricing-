@@ -97,9 +97,12 @@ export const adminQuotationsRoutes: FastifyPluginAsync<QuotationsRouteOptions> =
   const app = rawApp.withTypeProvider<ZodTypeProvider>();
   const adminRead = [
     requireAdminAuth(database),
-    requireAdminPermission('quotations:read', 'quotations:manage'),
+    requireAdminPermission('quotations:read', 'quotations:manage', 'admin:manage'),
   ];
-  const adminManage = [requireAdminAuth(database), requireAdminPermission('quotations:manage')];
+  const adminManage = [
+    requireAdminAuth(database),
+    requireAdminPermission('quotations:manage', 'admin:manage'),
+  ];
 
   // GET /api/v1/admin/quotations
   app.get(
