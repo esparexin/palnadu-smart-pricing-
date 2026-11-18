@@ -8,12 +8,13 @@ import {
   type products,
   type productVariants,
 } from '@palnadu/persistence';
-import { buildServer } from './server.js';
+import { buildServer, SESSION_COOKIE_NAME } from './server.js';
 
 const config = parseServerConfig({
   DATABASE_URL: 'postgres://user:pass@localhost:5432/catalog',
   LOG_LEVEL: 'silent',
   NODE_ENV: 'test',
+  SESSION_SECRET: 'test-session-secret-that-is-at-least-32-chars-long',
 });
 
 function createMockDatabase(overrides: Partial<DatabaseClient> = {}): DatabaseClient {
@@ -255,6 +256,107 @@ describe('Quotations API & Financial Calculation Engine', () => {
       expect(res.json()).toMatchObject({
         error: { code: 'VALIDATION_ERROR' },
       });
+    });
+  });
+
+  describe('Admin Quotations Authorization', () => {
+    function createAuthMockDb(userPermissions: string[]) {
+      const adminUser = {
+        id: randomUUID(),
+        email: 'admin@palnadu.dev',
+        name: 'Admin',
+        status: 'active' as const,
+        permissions: userPermissions,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      const authRow = [
+        {
+          session: {
+            id: randomUUID(),
+            userId: adminUser.id,
+            expiresAt: new Date(Date.now() + 100000),
+          },
+          user: adminUser,
+        },
+      ];
+
+      interface MockChain extends Promise<unknown> {
+        from: () => MockChain;
+        where: () => MockChain;
+        innerJoin: () => MockChain;
+        groupBy: () => MockChain;
+        orderBy: () => MockChain;
+        limit: (n?: number) => MockChain;
+        offset: () => MockChain;
+      }
+
+      const makeChain = (val: unknown): MockChain => {
+        const p = Promise.resolve(val) as MockChain;
+        p.from = () => makeChain(val);
+        p.where = () => makeChain(val);
+        p.innerJoin = () => makeChain(authRow);
+        p.groupBy = () => makeChain(val);
+        p.orderBy = () => makeChain([]);
+        p.limit = (n?: number) => makeChain(n === 1 ? authRow : []);
+        p.offset = () => makeChain(val);
+        return p;
+      };
+
+      return createMockDatabase({
+        db: {
+          select: vi
+            .fn()
+            .mockImplementation(() => makeChain([{ count: 0, totalGenerated: 0, totalValue: 0 }])),
+        } as unknown as DatabaseClient['db'],
+      });
+    }
+
+    it('rejects unauthenticated requests to quotation metrics with 401', async () => {
+      const server = await buildServer({ config, database: createMockDatabase() });
+      servers.push(server);
+
+      const res = await server.inject({
+        method: 'GET',
+        url: '/api/v1/admin/quotations/metrics',
+      });
+      expect(res.statusCode).toBe(401);
+    });
+
+    it('rejects admin user without quotation or admin permissions with 403', async () => {
+      const db = createAuthMockDb(['catalogue:read']);
+      const server = await buildServer({ config, database: db });
+      servers.push(server);
+
+      const res = await server.inject({
+        method: 'GET',
+        url: '/api/v1/admin/quotations/metrics',
+        headers: {
+          host: 'localhost:3000',
+          cookie: `${SESSION_COOKIE_NAME}=${server.signCookie('valid-token')}`,
+        },
+      });
+      expect(res.statusCode).toBe(403);
+    });
+
+    it('allows admin user with admin:manage permission to access quotation metrics', async () => {
+      const db = createAuthMockDb(['admin:manage']);
+      const server = await buildServer({ config, database: db });
+      servers.push(server);
+
+      const res = await server.inject({
+        method: 'GET',
+        url: '/api/v1/admin/quotations/metrics',
+        headers: {
+          host: 'localhost:3000',
+          cookie: `${SESSION_COOKIE_NAME}=${server.signCookie('valid-token')}`,
+        },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toHaveProperty('totalRequestsReceived');
+      expect(res.json()).toHaveProperty('totalQuotationsGenerated');
+      expect(res.json()).toHaveProperty('totalQuotationValuePaise');
+      expect(res.json()).toHaveProperty('frequentlyRequestedProducts');
     });
   });
 });
