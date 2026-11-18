@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { BasketItem } from '../../context/basket-context';
 
 export interface BasketItemRowProps {
@@ -11,16 +12,27 @@ export interface BasketItemRowProps {
 }
 
 export function BasketItemRow({ item, onUpdateQuantity, onRemove }: BasketItemRowProps) {
+  const router = useRouter();
+
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 border-b border-slate-200 bg-white hover:bg-slate-50/50 transition">
       {/* Product Information */}
-      <div className="flex items-center gap-3.5 flex-1 min-w-0">
+      <div
+        className="flex items-center gap-3.5 flex-1 min-w-0 cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg p-1"
+        onClick={() => router.push(`/products/${item.productSlug}`)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') router.push(`/products/${item.productSlug}`);
+        }}
+        tabIndex={0}
+        role="link"
+        aria-label={`View ${item.productName}`}
+      >
         <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100 flex items-center justify-center">
           {item.imageUrl ? (
             <img
               src={item.imageUrl}
               alt={item.productName}
-              className="h-full w-full object-contain p-1"
+              className="h-full w-full object-contain p-1 transition duration-150 group-hover:scale-105"
               loading="lazy"
             />
           ) : (
@@ -43,7 +55,8 @@ export function BasketItemRow({ item, onUpdateQuantity, onRemove }: BasketItemRo
         <div className="min-w-0 flex-1">
           <Link
             href={`/products/${item.productSlug}`}
-            className="text-sm font-semibold text-slate-900 hover:text-blue-600 focus:outline-none focus:underline truncate block"
+            onClick={(e) => e.stopPropagation()}
+            className="text-sm font-semibold text-slate-900 group-hover:text-blue-600 focus:outline-none focus:underline truncate block"
           >
             {item.productName}
           </Link>
@@ -65,7 +78,10 @@ export function BasketItemRow({ item, onUpdateQuantity, onRemove }: BasketItemRo
       </div>
 
       {/* Quantity & Actions */}
-      <div className="flex items-center justify-between sm:justify-end gap-4">
+      <div
+        className="flex items-center justify-between sm:justify-end gap-4"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Quantity Controls */}
         <div className="flex items-center rounded-lg border border-slate-300 bg-white">
           <button

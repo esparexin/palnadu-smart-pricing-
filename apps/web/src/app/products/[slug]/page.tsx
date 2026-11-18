@@ -50,7 +50,7 @@ export default function ProductDetailPage() {
     <div className="flex min-h-screen flex-col bg-slate-50">
       <StorefrontHeader />
 
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8 pb-24 md:pb-8">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8 pb-32 md:pb-8">
         {loading ? (
           <LoadingState label="Loading product specifications..." />
         ) : error || !product ? (
@@ -113,16 +113,18 @@ export default function ProductDetailPage() {
                     ))}
                   </div>
 
-                  <h1 className="mt-3 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+                  <h1 className="mt-3 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl break-words">
                     {product.name}
                   </h1>
 
                   {product.model && (
-                    <p className="mt-1 font-mono text-xs text-slate-500">Model: {product.model}</p>
+                    <p className="mt-1 font-mono text-xs text-slate-500 break-all">
+                      Model: {product.model}
+                    </p>
                   )}
 
                   <div className="mt-4 border-t border-slate-200 pt-4">
-                    <p className="text-sm text-slate-700 leading-relaxed">
+                    <p className="text-sm text-slate-700 leading-relaxed break-words">
                       {product.description ||
                         'Commercial equipment configuration. Refer to technical specifications below for mounting, voltage and interface requirements.'}
                     </p>

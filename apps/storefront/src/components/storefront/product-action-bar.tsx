@@ -49,8 +49,8 @@ export function ProductActionBar({ product }: ProductActionBarProps) {
 
   return (
     <>
-      {/* Desktop in-flow action card - hidden on mobile to prevent duplicate CTA */}
-      <aside className="hidden md:block rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+      {/* In-flow configuration card - visible on all viewports for model & quantity selection */}
+      <aside className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
         <div>
           <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             Indicative Estimate / Quotation Pricing
@@ -63,13 +63,13 @@ export function ProductActionBar({ product }: ProductActionBarProps) {
         {product.variants.length > 0 && (
           <div>
             <label
-              htmlFor="desktop-variant-select"
+              htmlFor="variant-select"
               className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1"
             >
               Select Model / Option
             </label>
             <select
-              id="desktop-variant-select"
+              id="variant-select"
               value={selectedVariantId}
               onChange={(e) => setSelectedVariantId(e.target.value)}
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 min-h-[44px]"
@@ -93,7 +93,7 @@ export function ProductActionBar({ product }: ProductActionBarProps) {
                 type="button"
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                 aria-label="Decrease quantity"
-                className="flex min-h-[44px] min-w-[44px] items-center justify-center text-slate-600 hover:bg-slate-100 rounded-l-lg"
+                className="flex min-h-[44px] min-w-[44px] items-center justify-center text-slate-600 hover:bg-slate-100 rounded-l-lg transition focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 -
               </button>
@@ -104,7 +104,7 @@ export function ProductActionBar({ product }: ProductActionBarProps) {
                 type="button"
                 onClick={() => setQuantity((q) => q + 1)}
                 aria-label="Increase quantity"
-                className="flex min-h-[44px] min-w-[44px] items-center justify-center text-slate-600 hover:bg-slate-100 rounded-r-lg"
+                className="flex min-h-[44px] min-w-[44px] items-center justify-center text-slate-600 hover:bg-slate-100 rounded-r-lg transition focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 +
               </button>
@@ -112,7 +112,8 @@ export function ProductActionBar({ product }: ProductActionBarProps) {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2.5 pt-2 border-t border-slate-100">
+        {/* Desktop actions - hidden on mobile where bottom sticky bar handles one-tap action */}
+        <div className="hidden md:flex flex-col sm:flex-row gap-2.5 pt-2 border-t border-slate-100">
           <button
             type="button"
             onClick={handleGetQuote}
@@ -145,9 +146,13 @@ export function ProductActionBar({ product }: ProductActionBarProps) {
       {/* Mobile-only sticky bottom action bar - exactly ONE action instance active on mobile */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200 bg-white/95 p-3.5 shadow-lg backdrop-blur pb-safe">
         <div className="mx-auto max-w-lg">
-          <p className="text-[11px] text-slate-500 text-center pb-2 italic">
-            Indicative estimate • Final terms confirmed during quotation
-          </p>
+          <div className="flex items-center justify-between text-[11px] text-slate-500 pb-1.5">
+            <span className="truncate max-w-[200px] font-medium text-slate-700">
+              {selectedVariant?.model || selectedVariant?.sku || 'Standard'} • {quantity}{' '}
+              {product.unit}
+            </span>
+            <span className="italic">Indicative estimate</span>
+          </div>
           <div className="flex gap-2">
             <button
               type="button"

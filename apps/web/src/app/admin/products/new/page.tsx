@@ -258,6 +258,8 @@ export default function NewProductPage() {
               prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
             )
           }
+          onSelectAllCategories={() => setSelectedCategoryIds(categories.map((c) => c.id))}
+          onDeselectAllCategories={() => setSelectedCategoryIds([])}
         />
 
         <PricingFields value={pricing} onChange={setPricing} />

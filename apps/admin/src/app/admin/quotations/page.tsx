@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { AdminQuotationDetail, QuotationStatus } from '@palnadu/contracts';
 import { apiClient } from '../../../lib/api-client';
 import { LoadingState } from '../../../components/loading-state';
@@ -42,6 +43,7 @@ function getStatusBadge(status: QuotationStatus) {
 }
 
 export default function AdminQuotationsPage() {
+  const router = useRouter();
   const [quotations, setQuotations] = useState<AdminQuotationDetail[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -184,14 +186,33 @@ export default function AdminQuotationsPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {quotations.map((q) => (
-                  <tr key={q.id} className="hover:bg-slate-50 transition">
+                  <tr
+                    key={q.id}
+                    onClick={() => router.push(`/admin/quotations/${q.id}`)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        router.push(`/admin/quotations/${q.id}`);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Review quotation ${q.referenceNumber}`}
+                    className="hover:bg-slate-50 transition cursor-pointer focus-visible:outline-none focus-visible:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500"
+                  >
                     <td className="px-4 py-3 font-mono font-bold text-blue-600">
-                      <Link href={`/admin/quotations/${q.id}`} className="hover:underline">
+                      <Link
+                        href={`/admin/quotations/${q.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="hover:underline"
+                      >
                         {q.referenceNumber}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 font-medium text-slate-900">{q.customerName}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">
+                    <td className="px-4 py-3 font-medium text-slate-900 break-words">
+                      {q.customerName}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-slate-500 break-all">
                       {q.customerPhone || q.customerEmail || '—'}
                     </td>
                     <td className="px-4 py-3">
@@ -201,16 +222,19 @@ export default function AdminQuotationsPage() {
                         {q.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-slate-600">{q.items.length} items</td>
-                    <td className="px-4 py-3 text-right font-mono font-semibold text-slate-900">
+                    <td className="px-4 py-3 text-xs text-slate-600 whitespace-nowrap">
+                      {q.items.length} items
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono font-semibold text-slate-900 whitespace-nowrap">
                       {formatCurrency(q.grandTotalPaise)}
                     </td>
-                    <td className="px-4 py-3 text-right text-xs text-slate-500">
+                    <td className="px-4 py-3 text-right text-xs text-slate-500 whitespace-nowrap">
                       {new Date(q.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                       <Link
                         href={`/admin/quotations/${q.id}`}
+                        onClick={(e) => e.stopPropagation()}
                         className="touch-target inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
                       >
                         Review

@@ -135,8 +135,8 @@ export function ProductVariantsSection({
       ) : (
         <div className="divide-y divide-slate-100">
           {variants.map((v) => (
-            <div key={v.id} className="flex items-center justify-between py-2.5 text-xs">
-              <div>
+            <div key={v.id} className="flex items-center justify-between py-2.5 text-xs gap-3">
+              <div className="min-w-0 flex-1 break-words">
                 <span className="font-semibold text-slate-800">{v.sku || 'No SKU'}</span>
                 {v.model && <span className="ml-2 text-slate-500 font-mono">({v.model})</span>}
                 {v.offerPricePaise && (
@@ -148,7 +148,7 @@ export function ProductVariantsSection({
               <button
                 type="button"
                 onClick={() => handleDelete(v.id)}
-                className="touch-target text-red-600 hover:text-red-800 font-medium px-2 py-1"
+                className="touch-target text-red-600 hover:text-red-800 font-medium px-2 py-1 shrink-0"
               >
                 Delete
               </button>

@@ -133,9 +133,28 @@ export default function CategoriesPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {categories.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50/70">
-                    <td className="px-6 py-4 font-semibold text-slate-900">{c.name}</td>
-                    <td className="px-6 py-4 font-mono text-xs text-slate-500">{c.slug}</td>
+                  <tr
+                    key={c.id}
+                    onClick={() => {
+                      setSelectedCategory(c);
+                      setModalOpen(true);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedCategory(c);
+                        setModalOpen(true);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Edit category ${c.name}`}
+                    className="hover:bg-slate-50/70 cursor-pointer transition focus-visible:outline-none focus-visible:bg-slate-100 focus-visible:ring-2 focus-visible:ring-emerald-500"
+                  >
+                    <td className="px-6 py-4 font-semibold text-slate-900 break-words">{c.name}</td>
+                    <td className="px-6 py-4 font-mono text-xs text-slate-500 break-all">
+                      {c.slug}
+                    </td>
                     <td className="px-6 py-4 text-xs text-slate-600">
                       {c.parentId && categoryMap.has(c.parentId) ? (
                         <span className="inline-flex items-center rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-800">
@@ -145,11 +164,12 @@ export default function CategoriesPage() {
                         <span className="text-slate-400 italic">Root Level</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="inline-flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setSelectedCategory(c);
                             setModalOpen(true);
                           }}
@@ -159,7 +179,10 @@ export default function CategoriesPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDelete(c)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(c);
+                          }}
                           className="touch-target rounded px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
                         >
                           Delete

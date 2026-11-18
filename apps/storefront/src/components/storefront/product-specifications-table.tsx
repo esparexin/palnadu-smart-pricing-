@@ -17,8 +17,8 @@ export function ProductSpecificationsTable({ product }: ProductSpecificationsTab
           <dl className="mt-4 divide-y divide-slate-100 border-t border-slate-100">
             {specs.map(([key, val]) => (
               <div key={key} className="grid grid-cols-1 py-3 sm:grid-cols-3 sm:gap-4">
-                <dt className="text-sm font-medium text-slate-500 capitalize">{key}</dt>
-                <dd className="text-sm text-slate-900 sm:col-span-2 font-mono">
+                <dt className="text-sm font-medium text-slate-500 capitalize break-words">{key}</dt>
+                <dd className="text-sm text-slate-900 sm:col-span-2 font-mono break-words">
                   {typeof val === 'object' ? JSON.stringify(val) : String(val)}
                 </dd>
               </div>
@@ -36,7 +36,7 @@ export function ProductSpecificationsTable({ product }: ProductSpecificationsTab
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <h2 className="text-lg font-bold text-slate-900">Available Models & Configurations</h2>
           <div className="mt-4 overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-700">
+            <table className="min-w-full text-left text-sm text-slate-700">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-900 uppercase">
                 <tr>
                   <th scope="col" className="px-4 py-3">
@@ -53,9 +53,13 @@ export function ProductSpecificationsTable({ product }: ProductSpecificationsTab
               <tbody className="divide-y divide-slate-100">
                 {product.variants.map((v) => (
                   <tr key={v.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 font-medium text-slate-900">{v.model || '—'}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-slate-600">{v.sku || '—'}</td>
-                    <td className="px-4 py-3 text-xs text-slate-600">
+                    <td className="px-4 py-3 font-medium text-slate-900 break-words">
+                      {v.model || '—'}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs text-slate-600 break-all">
+                      {v.sku || '—'}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-slate-600 break-words">
                       {Object.keys(v.options || {}).length > 0
                         ? Object.entries(v.options)
                             .map(([k, val]) => `${k}: ${String(val)}`)

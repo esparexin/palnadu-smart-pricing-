@@ -12,6 +12,8 @@ export interface ProductClassificationSectionProps {
   categories: CategoryResponse[];
   selectedCategoryIds: string[];
   onCategoryToggle: (categoryId: string) => void;
+  onSelectAllCategories?: () => void;
+  onDeselectAllCategories?: () => void;
 }
 
 export function ProductClassificationSection({
@@ -23,6 +25,8 @@ export function ProductClassificationSection({
   categories,
   selectedCategoryIds,
   onCategoryToggle,
+  onSelectAllCategories,
+  onDeselectAllCategories,
 }: ProductClassificationSectionProps) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
@@ -66,24 +70,56 @@ export function ProductClassificationSection({
       </div>
 
       <div>
-        <span className="block font-medium text-slate-700 text-xs mb-2">
-          Categories (Select Applicable Taxonomies)
-        </span>
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-medium text-slate-700 text-xs">
+            Categories (Select Applicable Taxonomies)
+            {selectedCategoryIds.length > 0 && (
+              <span className="ml-1.5 font-normal text-slate-500">
+                ({selectedCategoryIds.length} of {categories.length} selected)
+              </span>
+            )}
+          </span>
+          <div className="flex items-center gap-2">
+            {onSelectAllCategories && categories.length > 0 && (
+              <button
+                type="button"
+                onClick={onSelectAllCategories}
+                className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 touch-target px-1"
+              >
+                Select All
+              </button>
+            )}
+            {onDeselectAllCategories && selectedCategoryIds.length > 0 && (
+              <button
+                type="button"
+                onClick={onDeselectAllCategories}
+                className="text-[11px] font-semibold text-slate-500 hover:text-slate-700 touch-target px-1"
+              >
+                Deselect All
+              </button>
+            )}
+          </div>
+        </div>
         <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto p-2 border border-slate-200 rounded-md bg-slate-50">
-          {categories.map((c) => (
-            <button
-              type="button"
-              key={c.id}
-              onClick={() => onCategoryToggle(c.id)}
-              className={`touch-target px-2.5 py-1 rounded text-xs font-medium transition ${
-                selectedCategoryIds.includes(c.id)
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
-              }`}
-            >
-              {c.name}
-            </button>
-          ))}
+          {categories.map((c) => {
+            const isSelected = selectedCategoryIds.includes(c.id);
+            return (
+              <button
+                type="button"
+                key={c.id}
+                onClick={() => onCategoryToggle(c.id)}
+                aria-pressed={isSelected}
+                className={`touch-target px-2.5 py-1 rounded text-xs font-medium transition ${
+                  isSelected
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                {isSelected ? '✓ ' : ''}
+                {c.name}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
