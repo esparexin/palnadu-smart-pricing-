@@ -160,8 +160,8 @@ export function ProductRelationshipsSection({
       ) : (
         <div className="divide-y divide-slate-100">
           {relationships.map((rel) => (
-            <div key={rel.id} className="flex items-center justify-between py-2.5 text-xs">
-              <div>
+            <div key={rel.id} className="flex items-center justify-between py-2.5 text-xs gap-3">
+              <div className="min-w-0 flex-1 break-words">
                 <span className="font-mono text-slate-700">
                   {rel.targetProductId.slice(0, 8)}...
                 </span>
@@ -173,7 +173,7 @@ export function ProductRelationshipsSection({
               <button
                 type="button"
                 onClick={() => handleDelete(rel.id)}
-                className="touch-target text-red-600 hover:text-red-800 font-medium px-2 py-1"
+                className="touch-target text-red-600 hover:text-red-800 font-medium px-2 py-1 shrink-0"
               >
                 Delete
               </button>

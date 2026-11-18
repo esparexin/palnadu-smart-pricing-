@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { PublicProductDto } from '@palnadu/contracts';
 import { useBasket } from '../../context/basket-context';
 import { PricingDisclosure } from './pricing-disclosure';
@@ -11,6 +12,7 @@ export interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+  const router = useRouter();
   const { addItem, items } = useBasket();
   const [added, setAdded] = useState(false);
 
@@ -40,7 +42,18 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <article className="group flex flex-col justify-between overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md hover:border-slate-300">
+    <article
+      onClick={() => router.push(`/products/${product.slug}`)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          router.push(`/products/${product.slug}`);
+        }
+      }}
+      tabIndex={0}
+      role="link"
+      aria-label={`View ${product.name}`}
+      className="group flex flex-col justify-between overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md hover:border-slate-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+    >
       <div>
         {/* Product Image */}
         <div className="relative aspect-video w-full overflow-hidden bg-slate-100 flex items-center justify-center">
@@ -80,9 +93,10 @@ export function ProductCard({ product }: ProductCardProps) {
             ))}
           </div>
 
-          <h3 className="mt-2 text-base font-semibold text-slate-900 group-hover:text-blue-600 line-clamp-2">
+          <h3 className="mt-2 text-base font-semibold text-slate-900 group-hover:text-blue-600 line-clamp-2 break-words">
             <Link
               href={`/products/${product.slug}`}
+              onClick={(e) => e.stopPropagation()}
               className="focus:outline-none focus:underline rounded"
             >
               {product.name}
@@ -90,11 +104,15 @@ export function ProductCard({ product }: ProductCardProps) {
           </h3>
 
           {product.model && (
-            <p className="mt-1 text-xs text-slate-500 font-mono">Model: {product.model}</p>
+            <p className="mt-1 text-xs text-slate-500 font-mono break-all">
+              Model: {product.model}
+            </p>
           )}
 
           {product.description && (
-            <p className="mt-2 text-sm text-slate-600 line-clamp-2">{product.description}</p>
+            <p className="mt-2 text-sm text-slate-600 line-clamp-2 break-words">
+              {product.description}
+            </p>
           )}
 
           <PricingDisclosure variant="compact" className="mt-2.5" />
@@ -102,10 +120,11 @@ export function ProductCard({ product }: ProductCardProps) {
       </div>
 
       {/* Action Footer */}
-      <div className="border-t border-slate-100 p-4 pt-3">
+      <div className="border-t border-slate-100 p-4 pt-3" onClick={(e) => e.stopPropagation()}>
         {hasVariants ? (
           <Link
             href={`/products/${product.slug}`}
+            onClick={(e) => e.stopPropagation()}
             className="flex min-h-[44px] w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             Select Configuration ({product.variants.length} Options)
@@ -114,6 +133,7 @@ export function ProductCard({ product }: ProductCardProps) {
           <div className="grid grid-cols-2 gap-2">
             <Link
               href={`/products/${product.slug}`}
+              onClick={(e) => e.stopPropagation()}
               className="flex min-h-[44px] items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
             >
               View Specs

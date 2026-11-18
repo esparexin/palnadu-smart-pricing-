@@ -146,10 +146,25 @@ export default function ProductsPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {products.map((p) => (
-                  <tr key={p.id} className="hover:bg-slate-50/70">
+                  <tr
+                    key={p.id}
+                    onClick={() => router.push(`/admin/products/${p.id}`)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        router.push(`/admin/products/${p.id}`);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`View details for ${p.name}`}
+                    className="hover:bg-slate-50/80 cursor-pointer transition focus-visible:outline-none focus-visible:bg-slate-100 focus-visible:ring-2 focus-visible:ring-emerald-500"
+                  >
                     <td className="px-6 py-4">
-                      <div className="font-semibold text-slate-900">{p.name}</div>
-                      <div className="font-mono text-xs text-slate-400">
+                      <div className="font-semibold text-slate-900 hover:text-emerald-700 transition break-words">
+                        {p.name}
+                      </div>
+                      <div className="font-mono text-xs text-slate-400 break-all">
                         {p.model ? `Model: ${p.model} | ` : ''}slug: {p.slug}
                       </div>
                     </td>
@@ -185,17 +200,21 @@ export default function ProductsPage() {
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="inline-flex items-center gap-2">
                         <Link
                           href={`/admin/products/${p.id}`}
+                          onClick={(e) => e.stopPropagation()}
                           className="touch-target rounded px-2.5 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50"
                         >
                           Edit
                         </Link>
                         <button
                           type="button"
-                          onClick={() => handleDelete(p)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(p);
+                          }}
                           className="touch-target rounded px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
                         >
                           Delete

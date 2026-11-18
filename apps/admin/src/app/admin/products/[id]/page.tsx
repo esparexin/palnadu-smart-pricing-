@@ -54,20 +54,22 @@ export default function ProductDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <Link href="/admin/products" className="hover:text-slate-800">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 text-xs text-slate-500 overflow-x-auto whitespace-nowrap">
+            <Link href="/admin/products" className="hover:text-slate-800 shrink-0">
               Products
             </Link>
             <span>/</span>
-            <span className="font-mono text-slate-700">{product.slug}</span>
+            <span className="font-mono text-slate-700 break-all">{product.slug}</span>
           </div>
-          <h1 className="mt-1 font-bold text-2xl text-slate-900 tracking-tight">{product.name}</h1>
+          <h1 className="mt-1 font-bold text-2xl text-slate-900 tracking-tight break-words">
+            {product.name}
+          </h1>
         </div>
         <Link
           href="/admin/products"
-          className="touch-target rounded-md border border-slate-300 bg-white px-3 py-1.5 font-medium text-xs text-slate-700 hover:bg-slate-50"
+          className="touch-target inline-flex items-center justify-center min-h-[44px] sm:min-h-[36px] w-full sm:w-auto rounded-md border border-slate-300 bg-white px-3 py-1.5 font-medium text-xs text-slate-700 hover:bg-slate-50 shrink-0"
         >
           &larr; Back to Products
         </Link>

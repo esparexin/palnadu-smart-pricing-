@@ -56,7 +56,8 @@ function CategorySelector({
             <button
               key={cat.id}
               type="button"
-              onClick={() => onSelectCategory(cat.slug)}
+              onClick={() => onSelectCategory(isSelected ? '' : cat.slug)}
+              aria-pressed={isSelected}
               className={`flex min-h-[64px] flex-col items-center justify-center rounded-xl border p-3 text-center transition focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 isSelected
                   ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-sm ring-2 ring-blue-600/30'
@@ -111,7 +112,8 @@ function BrandSelector({ brands, selectedBrand, onSelectBrand }: BrandSelectorPr
             <button
               key={b.id}
               type="button"
-              onClick={() => onSelectBrand(b.slug)}
+              onClick={() => onSelectBrand(isSelected ? '' : b.slug)}
+              aria-pressed={isSelected}
               className={`min-h-[44px] inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 isSelected
                   ? 'bg-blue-600 text-white'

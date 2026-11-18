@@ -131,17 +131,37 @@ export default function BrandsPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {brands.map((b) => (
-                  <tr key={b.id} className="hover:bg-slate-50/70">
-                    <td className="px-6 py-4 font-semibold text-slate-900">{b.name}</td>
-                    <td className="px-6 py-4 font-mono text-xs text-slate-500">{b.slug}</td>
-                    <td className="px-6 py-4 text-xs text-slate-500">
+                  <tr
+                    key={b.id}
+                    onClick={() => {
+                      setSelectedBrand(b);
+                      setModalOpen(true);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedBrand(b);
+                        setModalOpen(true);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Edit brand ${b.name}`}
+                    className="hover:bg-slate-50/70 cursor-pointer transition focus-visible:outline-none focus-visible:bg-slate-100 focus-visible:ring-2 focus-visible:ring-emerald-500"
+                  >
+                    <td className="px-6 py-4 font-semibold text-slate-900 break-words">{b.name}</td>
+                    <td className="px-6 py-4 font-mono text-xs text-slate-500 break-all">
+                      {b.slug}
+                    </td>
+                    <td className="px-6 py-4 text-xs text-slate-500 whitespace-nowrap">
                       {new Date(b.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="inline-flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setSelectedBrand(b);
                             setModalOpen(true);
                           }}
@@ -151,7 +171,10 @@ export default function BrandsPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDelete(b)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(b);
+                          }}
                           className="touch-target rounded px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
                         >
                           Delete
